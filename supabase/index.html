@@ -151,10 +151,10 @@
         }
         .msg { display:flex; flex-direction:column; max-width:78%; animation:in .25s ease; }
         @keyframes in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-        .msg.se { align-self:flex-end; align-items:flex-end; }
-        .msg.re { align-self:flex-start; align-items:flex-start; }
-        .msg.fs { align-self:flex-start; align-items:flex-start; }
-        .msg.fr { align-self:flex-end; align-items:flex-end; }
+        .msg.se { align-self:flex-start; align-items:flex-start; }
+        .msg.re { align-self:flex-end; align-items:flex-end; }
+        .msg.fs { align-self:flex-end; align-items:flex-end; }
+        .msg.fr { align-self:flex-start; align-items:flex-start; }
         .msg .nm { font-size:.72rem; font-weight:bold; margin-bottom:2px; padding:0 4px; }
         .msg.re .nm { color:#53bdeb; cursor:pointer; }
         .msg.re .nm:hover { text-decoration:underline; }
@@ -178,10 +178,20 @@
             font-size:.65rem;opacity:.4;transition:.2s;padding:2px;
         }
         .msg .mt .act:hover { opacity:1; color:var(--primary); }
+        .msg .mt .act.reply-btn { color:var(--muted); }
+        .msg .mt .act.reply-btn:hover { color:#53bdeb; }
         .msg .mt .db { color:var(--danger); }
         .msg .mt .db:hover { opacity:1; transform:scale(1.15); }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .edited { font-size:.6rem; color:var(--muted); margin-right:4px; }
+        .msg .rqo {
+            font-size:.78rem;background:rgba(255,255,255,.06);
+            border-right:3px solid var(--primary);
+            padding:6px 10px;margin-bottom:4px;border-radius:4px;
+        }
+        .msg .rqo .rqn { font-weight:bold; color:var(--primary); font-size:.72rem; }
+        .msg .rqo .rqt { color:var(--muted); font-size:.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+        .msg .rqo .rqt img { display:none; }
         .msg .room-tag {
             font-size:.6rem;color:var(--muted);background:rgba(255,255,255,.08);
             padding:1px 6px;border-radius:4px;margin-right:4px;
@@ -216,24 +226,74 @@
             position:absolute;bottom:60px;left:12px;
             background:var(--panel);border-radius:12px;
             padding:10px;box-shadow:0 5px 30px rgba(0,0,0,.5);
-            display:none;z-index:500;max-width:320px;
+            display:none;z-index:500;width:420px;
         }
         #emoji-picker.open { display:block; }
         #emoji-picker .eg {
             display:grid;grid-template-columns:repeat(8,1fr);gap:4px;
-            max-height:200px;overflow-y:auto;
+            max-height:260px;overflow-y:auto;
         }
         #emoji-picker .eg span {
             font-size:1.4rem;cursor:pointer;text-align:center;
-            padding:4px;border-radius:6px;transition:background .15s;
-            line-height:1.4;
+            padding:5px;border-radius:6px;transition:background .15s;
+            line-height:1.5;
         }
         #emoji-picker .eg span:hover { background:rgba(255,255,255,.1); }
         #emoji-picker .search-emoji {
             width:100%;padding:6px 10px;margin-bottom:6px;
             border-radius:6px;border:1px solid #333;background:var(--input);
-            color:#fff;font-size:.8rem;outline:none;
+            color:#fff;outline:none;font-size:.85rem;
         }
+
+        /* ═══ GIF Picker ═══════════════════════ */
+        #gif-picker {
+            position:absolute;bottom:60px;left:12px;
+            background:var(--panel);border-radius:12px;
+            padding:10px;box-shadow:0 5px 30px rgba(0,0,0,.5);
+            display:none;z-index:500;width:420px;
+        }
+        #gif-picker.open { display:block; }
+        #gif-picker .gg {
+            display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
+            max-height:320px;overflow-y:auto;
+        }
+        #gif-picker .gg img {
+            width:100%;border-radius:8px;cursor:pointer;
+            transition:transform .15s;aspect-ratio:1/1;object-fit:cover;
+        }
+        #gif-picker .gg img:hover { transform:scale(1.05); }
+        #gif-picker .search-gif {
+            width:100%;padding:6px 10px;margin-bottom:6px;
+            border-radius:6px;border:1px solid #333;background:var(--input);
+            color:#fff;outline:none;font-size:.85rem;
+        }
+        #gif-picker .gif-loading {
+            text-align:center;color:var(--muted);padding:20px;font-size:.85rem;
+        }
+
+        /* ═══ Reply Bar ════════════════════════ */
+        #reply-bar {
+            background:var(--panel);padding:6px 12px;
+            display:none;align-items:center;gap:8px;
+            border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;
+        }
+        #reply-bar.open { display:flex; }
+        #reply-bar .rq {
+            flex:1;overflow:hidden;
+        }
+        #reply-bar .rq .rqn {
+            font-size:.75rem;color:var(--primary);font-weight:bold;
+        }
+        #reply-bar .rq .rqt {
+            font-size:.8rem;color:var(--muted);
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        }
+        #reply-bar .rq .rqt img { display:none; }
+        #reply-bar .rc {
+            background:none;border:none;color:var(--muted);
+            cursor:pointer;font-size:1.1rem;padding:4px;
+        }
+        #reply-bar .rc:hover { color:var(--text); }
 
         /* ═══ Edit Modal ══════════════════════ */
         #edit-overlay {
@@ -302,8 +362,8 @@
 
         /* ═══ Admin Badge ═══════════════════════ */
         .admin-badge { font-size:.55rem; vertical-align:middle; margin-right:3px; }
-        .msg.se .admin-badge { color:rgba(255,255,255,.6); }
-        .msg.re .admin-badge { color:var(--muted); }
+        .msg.se .admin-badge { color:#53bdeb; }
+        .msg.re .admin-badge { color:rgba(255,255,255,.6); }
         .u .admin-tag { font-size:.6rem; color:var(--muted); background:rgba(255,215,0,.15); padding:1px 6px; border-radius:4px; margin-right:4px; }
 
         /* ═══ Admin Delete (visible on all msgs) ═══ */
@@ -366,7 +426,6 @@
         </div>
         <div class="ht">
             <button class="ib onl" id="onlineToggle" title="المتصلون"><i class="fas fa-users"></i><span class="badge" id="onlineBadge"></span></button>
-            <button class="ib" id="fb" title="عكس"><i class="fas fa-exchange-alt"></i></button>
             <button class="ib" id="soundToggle" title="الصوت"><i class="fas fa-volume-up"></i></button>
         </div>
     </header>
@@ -392,18 +451,35 @@
 
     </div>
     <footer style="position:relative">
-        <button class="ib" id="emojiBtn" title="إيموجي"><i class="fas fa-smile"></i></button>
-        <label for="fi" class="ib" title="صورة"><i class="fas fa-paperclip"></i></label>
-        <input type="file" id="fi" hidden accept="image/*">
-        <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
         <button class="ib sb" id="snd"><i class="fas fa-paper-plane"></i></button>
+        <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
+        <input type="file" id="fi" hidden accept="image/*">
+        <label for="fi" class="ib" title="صورة"><i class="fas fa-paperclip"></i></label>
+        <button class="ib" id="gifBtn" title="GIF"><i class="fas fa-icons"></i></button>
+        <button class="ib" id="emojiBtn" title="إيموجي"><i class="fas fa-smile"></i></button>
 
         <!-- Emoji Picker -->
         <div id="emoji-picker">
             <input class="search-emoji" id="emojiSearch" placeholder="🔍 بحث..." autocomplete="off">
             <div class="eg" id="emojiGrid"></div>
         </div>
+
+        <!-- GIF Picker -->
+        <div id="gif-picker">
+            <input class="search-gif" id="gifSearch" placeholder="🔍 بحث عن GIF..." autocomplete="off">
+            <div class="gif-loading" id="gifStatus">ابحث عن GIF</div>
+            <div class="gg" id="gifGrid"></div>
+        </div>
     </footer>
+
+    <!-- ═══ Reply Bar ═════════════════════ -->
+    <div id="reply-bar">
+        <div class="rq">
+            <div class="rqn" id="replyName"></div>
+            <div class="rqt" id="replyText"></div>
+        </div>
+        <button class="rc" id="replyClose"><i class="fas fa-times"></i></button>
+    </div>
 </div>
 
 <!-- ═══ Edit Modal ═════════════════ -->
@@ -429,13 +505,14 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vbWVvZGpndGh0Y2F2a2R2YmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDU4NDYsImV4cCI6MjA5NjMyMTg0Nn0.yg-ef5sckQA-U1vP5usVrKYrRTcuMQQRygRhw5q0_DA';
 
     // ── Config ─────────────────────────
-    const KEYS = { uid:'nxc_uid', name:'nxc_name', color:'nxc_color', flip:'nxc_flip', draft:'nxc_draft', sound:'nxc_sound' };
+    const KEYS = { uid:'nxc_uid', name:'nxc_name', color:'nxc_color', draft:'nxc_draft', sound:'nxc_sound' };
     const MAX_IMG = 500_000;
     const PICKER_EMOJIS = ['😊','😂','❤️','🔥','👍','😍','🎉','💀','🙏','😭','😅','🤣','😎','🥺','✨','💪','😏','🤔','👀','😴','🤯','🥳','😈','🫡','🤝','✅','❌','⭐','💯','🔥','⚡','🌈','🎂','🎈','🎁','💎','👑','🚀','💡','📱','💻','🎮','🎵','🎬','📸','✈️','🏠','🌍','💰','🔑','🛡️','⚔️','🧠','🫀','👁️','🦾','🦿','🦷','👅','💋','👂','👃','🦶','👋','✋','🖐️','💔','🖤','💙','💚','💛','🧡','💜','🤎','🩵','💝','🌸','🌺','🌻','🌹','🍀','🌿','☀️','🌙','⭐','🌊','🔥','❄️','🍕','🍔','🌮','🍩','☕','🍺','🥂'];
+    const GIPHY_KEY = 's6B4hDSI4W16Mp9IEANSvHP635oWBSL2'; // ← ضع مفتاح GIPHY من https://developers.giphy.com (مجاني)
 
     // ── State ──────────────────────────
     let sb = null, userId = null, myName = '', myColor = '#005c4b';
-    let isFlipped = false, subChannel = null;
+    let subChannel = null;
     let currentRoom = 'general', editingMsgId = null;
     let soundOn = true;
     let allUsers = []; // [{id, username, color, is_admin}]
@@ -444,6 +521,7 @@
     let isAdmin = false;
     let unreadCounts = {}; // { userId: count }
     let lastDmTime = {};  // { userId: timestamp }
+    let replyTo = null;   // { id, text, user_id, user_name }
     function getDmPartner(room, myId) {
         const p = room.replace('dm:','').split('_');
         return p[0] === myId ? p[1] : p[0];
@@ -452,10 +530,12 @@
     // ── DOM ────────────────────────────
     const $ = id => document.getElementById(id);
     const chat = $('chat'), mi = $('mi'), snd = $('snd'), scr = $('screen');
-    const ni = $('ni'), jb = $('jb'), ty = $('typing'), fb = $('fb'), ts = $('toast');
+    const ni = $('ni'), jb = $('jb'), ty = $('typing'), ts = $('toast');
     const sBar2 = $('sBar2'), fi = $('fi'), roomTitle = $('roomTitle');
     const onlineToggle = $('onlineToggle'), sidebar = $('sidebar'), onlineList = $('online-list');
     const emojiBtn = $('emojiBtn'), emojiPicker = $('emoji-picker'), emojiGrid = $('emojiGrid'), emojiSearch = $('emojiSearch');
+    const gifBtn = $('gifBtn'), gifPicker = $('gif-picker'), gifGrid = $('gifGrid'), gifSearch = $('gifSearch'), gifStatus = $('gifStatus');
+    const replyBar = $('reply-bar'), replyName = $('replyName'), replyText = $('replyText'), replyClose = $('replyClose');
     const editOverlay = $('edit-overlay'), editText = $('editText'), editSave = $('editSave'), editCancel = $('editCancel');
     const soundToggle = $('soundToggle'), onlineBadge = $('onlineBadge');
 
@@ -525,6 +605,98 @@
         if(!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target))
             emojiPicker.classList.remove('open');
     });
+
+    // ════════════════════════════════════
+    // 🖼️  GIF PICKER (GIPHY)
+    // ════════════════════════════════════
+    let gifTimer = null;
+    async function searchGIFs(query) {
+        if(!query.trim()) { gifStatus.textContent='ابحث عن GIF'; gifStatus.style.display=''; gifGrid.innerHTML=''; return; }
+        if(!GIPHY_KEY) { gifStatus.textContent='⚠️ ضع مفتاح GIPHY_KEY في الكود'; return; }
+        gifStatus.textContent='⏳ جاري البحث...'; gifStatus.style.display='';
+        gifGrid.innerHTML='';
+        try {
+            const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=20&rating=g`;
+            const r = await fetch(url);
+            const j = await r.json();
+            if(j.data && j.data.length) {
+                gifStatus.style.display='none';
+                j.data.forEach(g => {
+                    const u = g.images?.fixed_height?.url || g.images?.original?.url;
+                    if(!u) return;
+                    const img = document.createElement('img');
+                    img.src = u;
+                    img.loading = 'lazy';
+                    img.addEventListener('click', () => sendGIF(u));
+                    gifGrid.appendChild(img);
+                });
+            } else {
+                gifStatus.textContent='😕 لا توجد نتائج';
+            }
+        } catch(e) {
+            gifStatus.textContent='⚠️ فشل البحث: '+e.message;
+        }
+    }
+    gifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        emojiPicker.classList.remove('open');
+        gifPicker.classList.toggle('open');
+        if(gifPicker.classList.contains('open')) gifSearch.value='';
+    });
+    gifSearch.addEventListener('input', () => {
+        clearTimeout(gifTimer);
+        gifTimer = setTimeout(() => searchGIFs(gifSearch.value), 400);
+    });
+    // Close GIF picker on outside click
+    document.addEventListener('click', (e) => {
+        if(!gifPicker.contains(e.target) && e.target !== gifBtn && !gifBtn.contains(e.target))
+            gifPicker.classList.remove('open');
+    });
+
+    function sendGIF(url) {
+        gifPicker.classList.remove('open');
+        const msg = { text: url, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
+        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
+        mi.value = ''; saveDraft();
+        const tempId = 'temp_' + Date.now();
+        msg.id = tempId;
+        renderMessage(msg);
+        scrollDown();
+        playSound('send');
+        sb.from('messages').insert({
+            text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
+            color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
+            reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
+        }).select().then(({data, error}) => {
+            if(error) { toast('فشل إرسال GIF: '+error.message); return; }
+            if(data && data[0] && data[0].id) {
+                const el = chat.querySelector(`[data-id="${tempId}"]`);
+                if(el) {
+                    el.setAttribute('data-id', data[0].id);
+                    el.querySelector('[data-edit]')?.setAttribute('data-edit', data[0].id);
+                    el.querySelector('[data-del]')?.setAttribute('data-del', data[0].id);
+                }
+                myMessages.delete(tempId); myMessages.add(data[0].id);
+            }
+        });
+    }
+
+    // ════════════════════════════════════
+    // ↩️  REPLY SYSTEM
+    // ════════════════════════════════════
+    function setReply(msgId, msgText, msgUserId, msgUserName) {
+        replyTo = { id: msgId, text: msgText, user_id: msgUserId, user_name: msgUserName };
+        replyName.textContent = 'الرد على ' + (msgUserName||'مجهول');
+        const clean = msgText.replace(/^data:image.*/, '🖼️ صورة').replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF');
+        replyText.textContent = clean.substring(0, 60);
+        replyBar.classList.add('open');
+        mi.focus();
+    }
+    function cancelReply() {
+        replyTo = null;
+        replyBar.classList.remove('open');
+    }
+    replyClose.addEventListener('click', cancelReply);
 
     // ════════════════════════════════════
     // 👥  ONLINE / ALL USERS
@@ -790,28 +962,41 @@
     function renderMessage(msg) {
         const isMe = msg.user_id === userId;
         const bc = isMe ? (msg.color||myColor) : (msg.color||'#202c33');
-        const align = isFlipped ? (isMe?'fs':'fr') : (isMe?'se':'re');
+        const align = isMe ? 'se' : 're';
 
         const div = document.createElement('div');
         div.className = `msg ${align}`;
         div.setAttribute('data-id', msg.id);
 
-        const isImg = msg.text && msg.text.startsWith('data:image');
+        const isGif = msg.text && (msg.text.startsWith('https://') || msg.text.startsWith('http://')) && (msg.text.includes('giphy.com') || msg.text.endsWith('.gif'));
+        const isImg = !isGif && msg.text && msg.text.startsWith('data:image');
         const bstyle = !isMe ? ` style="background:${bc}"` : '';
 
+        // ── Reply Quote ──
+        let replyHtml = '';
+        let replyData = null;
+        if(msg.reply_to) {
+            try { replyData = typeof msg.reply_to === 'string' ? JSON.parse(msg.reply_to) : msg.reply_to; } catch(e) {}
+        }
+        if(replyData && replyData.user_name) {
+            const rt = replyData.text ? replyData.text.replace(/^data:image.*/, '🖼️ صورة').replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF').substring(0, 60) : '';
+            replyHtml = `<div class="rqo"><div class="rqn">${esc(replyData.user_name)}</div><span class="rqt">${esc(rt)}</span></div>`;
+        }
+
         let body = '';
-        if(isImg) body = `<img src="${esc(msg.text)}" onclick="window.open('${esc(msg.text)}')" loading="lazy">`;
+        if(isGif) body = `<img src="${esc(msg.text)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
+        else if(isImg) body = `<img src="${esc(msg.text)}" onclick="window.open('${esc(msg.text)}')" loading="lazy">`;
         else body = linkify(msg.text||'');
 
         const time = msg.created_at
             ? new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
 
         let actions = '';
+        actions += `<button class="act reply-btn" data-reply="${msg.id}" title="رد"><i class="fas fa-reply"></i></button>`;
         if(isMe) {
             actions += `<button class="act" data-edit="${msg.id}" title="تعديل"><i class="fas fa-pen"></i></button>`;
             actions += `<button class="act db" data-del="${msg.id}" title="حذف"><i class="fas fa-trash"></i></button>`;
         } else if(isAdmin) {
-            // Admin can delete any message
             actions += `<button class="act admin-del" data-admin-del="${msg.id}" title="حذف (آدمين)"><i class="fas fa-trash"></i></button>`;
         }
 
@@ -822,11 +1007,18 @@
         div.innerHTML = `
             <span class="nm">${esc(senderName)}${adminBadge}</span>
             <div class="bb"${bstyle}>
+                ${replyHtml}
                 ${body}
                 <div class="mt">${edited}<span>${time}</span>${actions}</div>
             </div>`;
 
         chat.appendChild(div);
+
+        // Reply click
+        div.querySelector('[data-reply]')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setReply(msg.id, msg.text, msg.user_id, msg.user_name);
+        });
 
         // Edit click
         div.querySelector('[data-edit]')?.addEventListener('click', (e) => {
@@ -910,6 +1102,7 @@
         if(text.length > 10000) { toast('الرسالة طويلة جداً'); return; }
 
         const msg = { text, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
+        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
         mi.value = ''; saveDraft();
 
         // Optimistic render (appears immediately)
@@ -922,7 +1115,8 @@
         try {
             const { data, error } = await sb.from('messages').insert({
                 text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
-                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
+                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
+                reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
             }).select();
             if(error) throw error;
             // Replace temp ID with real DB ID so delete/edit work immediately
@@ -945,6 +1139,7 @@
     async function sendImage(base64) {
         if(base64.length > MAX_IMG) { toast('حجم الصورة كبير جداً (500KB كحد أقصى)'); return; }
         const msg = { text:base64, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
+        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;
         renderMessage(msg);
@@ -954,7 +1149,8 @@
         try {
             const { data, error } = await sb.from('messages').insert({
                 text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
-                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
+                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
+                reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
             }).select();
             if(error) throw error;
             // Replace temp ID with real DB ID so delete/edit work immediately
@@ -1030,21 +1226,6 @@
         const img = e.target.closest('.bb img');
         if(img && img.src.startsWith('data:image')) window.open(img.src);
     });
-
-    // ════════════════════════════════════
-    // 🔄  FLIP
-    // ════════════════════════════════════
-    fb.addEventListener('click', () => {
-        isFlipped = !isFlipped;
-        fb.classList.toggle('on', isFlipped);
-        localStorage.setItem(KEYS.flip, isFlipped?'1':'0');
-        document.querySelectorAll('.msg').forEach(el => {
-            const isMe = el.classList.contains('se')||el.classList.contains('fs');
-            el.classList.remove('se','re','fs','fr');
-            el.classList.add(isFlipped ? (isMe?'fs':'fr') : (isMe?'se':'re'));
-        });
-    });
-    if(localStorage.getItem(KEYS.flip)==='1') { isFlipped=true; fb.classList.add('on'); }
 
     // ════════════════════════════════════
     // 🔊  SOUND TOGGLE
