@@ -1914,22 +1914,31 @@
         if(pw !== pw2) { err.textContent = 'كلمة السر غير متطابقة'; return; }
         if(!initSupabase()) return;
 
-        // Check if username exists
-        const { data: existing } = await sb.from('profiles').select('id').eq('username', username).maybeSingle();
-        if(existing) { err.textContent = 'اسم المستخدم موجود مسبقاً'; return; }
+        $('sb').disabled = true;
+        $('sb').textContent = '⏳ جاري الاتصال...';
+        try {
+            // Check if username exists
+            const { data: existing, error: checkErr } = await sb.from('profiles').select('id').eq('username', username).maybeSingle().timeout(8000);
+            if(checkErr) throw checkErr;
+            if(existing) { err.textContent = 'اسم المستخدم موجود مسبقاً'; $('sb').disabled = false; $('sb').textContent = 'إنشاء الحساب'; return; }
 
-        const pwHash = await hashPass(pw);
-        const color = document.querySelector('#tab-signup .dot.ok')?.getAttribute('data-c') || '#005c4b';
+            const pwHash = await hashPass(pw);
+            const color = document.querySelector('#tab-signup .dot.ok')?.getAttribute('data-c') || '#005c4b';
 
-        const { data, error } = await sb.from('profiles').insert({
-            username, password: pwHash, color
-        }).select().single();
+            const { data, error } = await sb.from('profiles').insert({
+                username, password: pwHash, color
+            }).select().single().timeout(8000);
 
-        if(error) { err.textContent = 'فشل إنشاء الحساب: ' + error.message; return; }
+            if(error) { err.textContent = 'فشل إنشاء الحساب: ' + error.message; $('sb').disabled = false; $('sb').textContent = 'إنشاء الحساب'; return; }
 
-        toast('✅ تم إنشاء الحساب!');
-        lastRead = Date.now();
-        joinChat(data);
+            toast('✅ تم إنشاء الحساب!');
+            lastRead = Date.now();
+            joinChat(data);
+        } catch(e) {
+            $('sb').disabled = false;
+            $('sb').textContent = 'إنشاء الحساب';
+            err.textContent = '⚠️ تعذر الاتصال: ' + (e.message||'خطأ في الشبكة');
+        }
     });
 
     // ── Login ──────────────────────────
@@ -1943,19 +1952,28 @@
         if(!pw) { err.textContent = 'يرجى إدخال كلمة السر'; return; }
         if(!initSupabase()) return;
 
-        const { data, error } = await sb.from('profiles')
-            .select('*')
-            .eq('username', username)
-            .maybeSingle();
+        $('lb').disabled = true;
+        $('lb').textContent = '⏳ جاري الاتصال...';
+        try {
+            const { data, error } = await sb.from('profiles')
+                .select('*')
+                .eq('username', username)
+                .maybeSingle()
+                .timeout(8000);
 
-        if(error || !data) { err.textContent = 'اسم المستخدم غير موجود'; return; }
+            if(error || !data) { err.textContent = 'اسم المستخدم غير موجود'; $('lb').disabled = false; $('lb').textContent = 'تسجيل الدخول'; return; }
 
-        const pwHash = await hashPass(pw);
-        if(data.password !== pwHash) { err.textContent = 'كلمة السر خطأ'; return; }
+            const pwHash = await hashPass(pw);
+            if(data.password !== pwHash) { err.textContent = 'كلمة السر خطأ'; $('lb').disabled = false; $('lb').textContent = 'تسجيل الدخول'; return; }
 
-        toast('✅ أهلًا بك!');
-        lastRead = Date.now();
-        joinChat(data);
+            toast('✅ أهلًا بك!');
+            lastRead = Date.now();
+            joinChat(data);
+        } catch(e) {
+            $('lb').disabled = false;
+            $('lb').textContent = 'تسجيل الدخول';
+            err.textContent = '⚠️ تعذر الاتصال: ' + (e.message||'خطأ في الشبكة');
+        }
     });
 
     // ════════════════════════════════════
