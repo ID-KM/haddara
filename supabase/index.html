@@ -193,6 +193,31 @@
             background-blend-mode:overlay;background-color:var(--bg);
             display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;
         }
+
+        /* ═══ Scroll-to-bottom Button ═══════ */
+        #chat-wrap { position:relative; }
+        #scroll-bottom {
+            position:absolute;bottom:20px;left:20px;
+            width:42px;height:42px;border-radius:50%;
+            background:var(--panel);color:var(--text);
+            align-items:center;justify-content:center;
+            cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5);
+            z-index:100;transition:transform .15s,opacity .2s;
+            opacity:0;
+        }
+        #scroll-bottom.sb-show { display:flex; opacity:1; }
+        #scroll-bottom:hover { transform:scale(1.1); }
+        #scroll-bottom:active { transform:scale(.9); }
+        #scroll-bottom i { font-size:1.1rem; }
+        #sb-count {
+            position:absolute;top:-6px;right:-6px;
+            min-width:20px;height:20px;border-radius:10px;
+            background:var(--primary);color:#fff;
+            font-size:.7rem;font-weight:bold;
+            display:flex;align-items:center;justify-content:center;
+            padding:0 5px;box-shadow:0 1px 4px rgba(0,0,0,.4);
+        }
+        .sb-hide { display:none !important; }
         .msg { display:flex; flex-direction:column; max-width:78%; animation:in .25s ease; content-visibility:auto; contain-intrinsic-size:56px; }
         @keyframes in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         .msg.se { align-self:flex-start; align-items:flex-start; }
@@ -519,6 +544,12 @@
             <!-- ═══ Chat Messages ═══════════════ -->
             <div id="chat"><div id="loading"><div class="spinner"></div>جاري التحميل...</div></div>
 
+            <!-- ═══ Scroll-to-bottom ═══════════ -->
+            <div id="scroll-bottom" class="sb-hide">
+                <i class="fas fa-chevron-down"></i>
+                <span id="sb-count" class="sb-hide">0</span>
+            </div>
+
             <!-- ═══ Typing ══════════════════════ -->
             <div id="typing"></div>
 
@@ -611,6 +642,7 @@
     let replyTo = null;   // { id, text, user_id, user_name }
     let dmPreview = {};   // { userId: { text, time } }
     let lastRead = Date.now();
+    let newWhileUp = 0;   // messages received while scrolled up
 
     // ── Performance helpers ────────────
     function debounce(fn, ms) {
@@ -1194,6 +1226,13 @@
                         renderMessage(n);
                         scrollDown();
                         playSound('receive');
+                        // If still not near bottom, show badge
+                        if(!isNearBottom()) {
+                            newWhileUp++;
+                            sbCount.textContent = newWhileUp;
+                            sbCount.classList.remove('sb-hide');
+                            sbBtn.classList.add('sb-show');
+                        }
                     }
                 }
                 break;
@@ -1521,6 +1560,31 @@
     chat.addEventListener('click', (e) => {
         const img = e.target.closest('.bb img');
         if(img && img.src.startsWith('data:image')) window.open(img.src);
+    });
+
+    // ════════════════════════════════════
+    // ⬇️  SCROLL-TO-BOTTOM
+    // ════════════════════════════════════
+    const sbBtn = $('scroll-bottom');
+    const sbCount = $('sb-count');
+
+    chat.addEventListener('scroll', () => {
+        const far = chat.scrollHeight - chat.scrollTop - chat.clientHeight;
+        if(far < 150) {
+            sbBtn.classList.remove('sb-show');
+            newWhileUp = 0;
+            sbCount.textContent = '0';
+            sbCount.classList.add('sb-hide');
+        } else {
+            sbBtn.classList.add('sb-show');
+        }
+    });
+
+    sbBtn.addEventListener('click', () => {
+        chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+        newWhileUp = 0;
+        sbCount.textContent = '0';
+        sbCount.classList.add('sb-hide');
     });
 
     // ════════════════════════════════════
