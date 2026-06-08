@@ -193,7 +193,7 @@
             background-blend-mode:overlay;background-color:var(--bg);
             display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;
         }
-        .msg { display:flex; flex-direction:column; max-width:78%; animation:in .25s ease; }
+        .msg { display:flex; flex-direction:column; max-width:78%; animation:in .25s ease; content-visibility:auto; contain-intrinsic-size:56px; }
         @keyframes in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         .msg.se { align-self:flex-start; align-items:flex-start; }
         .msg.re { align-self:flex-end; align-items:flex-end; }
@@ -611,6 +611,22 @@
     let replyTo = null;   // { id, text, user_id, user_name }
     let dmPreview = {};   // { userId: { text, time } }
     let lastRead = Date.now();
+
+    // ── Performance helpers ────────────
+    function debounce(fn, ms) {
+        let timer;
+        return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+    }
+    function isNearBottom() {
+        return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 150;
+    }
+    let _lastUserSnap = '';
+    function usersChanged() {
+        const snap = JSON.stringify(allUsers.map(u => u.id + '|' + (u.is_admin?'1':'0')));
+        if(snap === _lastUserSnap) return false;
+        _lastUserSnap = snap;
+        return true;
+    }
     function getDmPartner(room, myId) {
         const p = room.replace('dm:','').split('_');
         return p[0] === myId ? p[1] : p[0];
@@ -870,6 +886,7 @@
     // ════════════════════════════════════
     // 👥  ONLINE / ALL USERS
     let allOnlineCollapsed = false;
+    const debouncedRenderUsers = debounce(renderOnlineUsers, 80);
 
     function renderOnlineUsers() {
         const me = allUsers.find(u => u.id === userId);
@@ -983,7 +1000,7 @@
         const { data, error } = await sb.from('profiles').select('id, username, color, is_admin');
         if(error) { console.error('فشل تحميل المستخدمين:', error.message); return; }
         allUsers = data || [];
-        renderOnlineUsers();
+        if(usersChanged()) renderOnlineUsers();
     }
 
     async function initUnreadFromHistory() {
@@ -1155,7 +1172,7 @@
                             // Auto-open sidebar on incoming DM
                             sidebar.classList.add('open');
                         }
-                        renderOnlineUsers();
+                        debouncedRenderUsers();
                     }
                 }
 
@@ -1171,12 +1188,12 @@
                             if(delBtn) delBtn.setAttribute('data-del', n.id);
                         }
                     } else {
-                        sb.from('profiles').select('is_admin').eq('id', n.user_id).maybeSingle().then(({data: p}) => {
-                            n.is_admin = p?.is_admin || false;
-                            renderMessage(n);
-                            scrollDown();
-                            playSound('receive');
-                        });
+                        // Look up profile locally instead of API call
+                        const profile = allUsers.find(u => u.id === n.user_id);
+                        n.is_admin = profile?.is_admin || false;
+                        renderMessage(n);
+                        scrollDown();
+                        playSound('receive');
                     }
                 }
                 break;
@@ -1326,7 +1343,11 @@
         }
     }
 
-    function scrollDown() { requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; }); }
+    function scrollDown() {
+        requestAnimationFrame(() => {
+            if(isNearBottom()) chat.scrollTop = chat.scrollHeight;
+        });
+    }
 
     // ════════════════════════════════════
     // ✏️  EDIT MESSAGE
@@ -1724,12 +1745,15 @@
     // ════════════════════════════════════
     // ❤️  HEARTBEAT — refresh users list
     // ════════════════════════════════════
-    setInterval(() => {
-        loadUsers();
+    let _lastLoad = 0;
+
+    setInterval(async () => {
+        if(Date.now() - _lastLoad > 25000) { _lastLoad = Date.now(); loadUsers(); }
     }, 30000);
 
     document.addEventListener('visibilitychange', () => {
-        if(!document.hidden) {
+        if(!document.hidden && Date.now() - _lastLoad > 10000) {
+            _lastLoad = Date.now();
             loadUsers();
         }
     });
