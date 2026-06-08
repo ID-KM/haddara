@@ -718,13 +718,25 @@
 
     // ── Mobile keyboard fix ──────────────
     if(window.visualViewport) {
+        const vv = window.visualViewport;
+        // Only adjust height when keyboard opens (big change), not on page load
+        let fullHeight = vv.height;
         const fixHeight = () => {
             const app = document.querySelector('.app');
-            if(app) app.style.height = window.visualViewport.height + 'px';
+            if(!app) return;
+            const diff = fullHeight - vv.height;
+            if(diff > 50) {
+                // Keyboard open → shrink app so footer stays visible
+                app.style.height = vv.height + 'px';
+            } else {
+                // Keyboard closed → let CSS (100dvh) handle it
+                app.style.height = '';
+                fullHeight = vv.height;
+            }
         };
-        window.visualViewport.addEventListener('resize', fixHeight);
+        vv.addEventListener('resize', fixHeight);
         window.addEventListener('scroll', () => window.scrollTo(0, 0));
-        fixHeight();
+        // NO initial fixHeight() call — CSS 100dvh handles it
     }
     // Focus input → make sure footer is visible on mobile
     document.addEventListener('focusin', (e) => {
