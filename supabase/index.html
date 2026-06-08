@@ -416,17 +416,19 @@
             .msg { max-width:92%; }
             .msg .bb { font-size:1rem; }
             .msg .nm { font-size:.8rem; }
-            .msg .rxn { padding:2px 8px; font-size:.75rem; }
-            .msg .rxn-add { width:22px;height:22px; font-size:.65rem; }
-            .msg .mt .act { font-size:.75rem; padding:4px; }
+            .msg .rxn { padding:4px 10px; font-size:.8rem; }
+            .msg .rxn-add { width:28px;height:28px; font-size:.75rem; }
+            .msg .mt .act { font-size:.75rem; padding:6px; }
             .card { width:95%; padding:2rem 1.5rem; }
             .card h1 { font-size:1.2rem; }
             .card .fa-comments { font-size:2rem !important; }
             .card p { margin-bottom:1rem; }
             .card input { padding:12px 14px; font-size:1rem; }
             .card button { padding:12px; }
+            .tabc .dot { width:36px;height:36px; }
             .iw input { padding:14px 0; font-size:1rem; }
-            .ib { width:40px;height:40px; font-size:1.2rem; }
+            .ib { width:42px;height:42px; font-size:1.2rem; }
+            #sidebarClose { height:36px !important; font-size:.8rem !important; }
             header { padding:8px 10px; }
             .hl { overflow:visible; }
             #sidebar.open { width:100%; }
@@ -440,6 +442,7 @@
             #screen { padding:8px; align-items:flex-start; padding-top:10vh; }
             .card { padding:1.5rem 1rem; }
             .card .tabs { margin-bottom:.5rem; }
+            * { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
         }
         @media (max-width:400px) {
             .msg { max-width:95%; }
@@ -529,7 +532,7 @@
         /* ═══ Responsive ══════════════════════ */
         @media (max-width:640px) {
             .msg { max-width:88%; } .card { padding:1.5rem; }
-            #sidebar.open { width:100%; position:fixed; top:0; left:0; bottom:0; z-index:100; }
+            #sidebar.open { width:100%; position:fixed; top:0; left:0; bottom:0; z-index:100; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
             #sidebar .u { padding:14px 16px; }
         }
 
@@ -654,7 +657,7 @@
     <footer style="position:relative">
         <button class="ib sb" id="snd"><i class="fas fa-paper-plane"></i></button>
         <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
-        <input type="file" id="fi" hidden accept="image/*">
+        <input type="file" id="fi" hidden accept="image/*" capture="environment">
         <label for="fi" class="ib" title="صورة"><i class="fas fa-paperclip"></i></label>
         <button class="ib" id="voiceBtn" title="رسالة صوتية"><i class="fas fa-microphone"></i></button>
         <button class="ib" id="gifBtn" title="GIF"><i class="fas fa-icons"></i></button>
@@ -866,7 +869,9 @@
         }
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRec = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+            const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac', 'audio/ogg;codecs=opus'];
+            const mimeType = mimeTypes.find(mt => MediaRecorder.isTypeSupported(mt)) || '';
+            mediaRec = new MediaRecorder(stream, mimeType ? { mimeType } : {});
             audioChunks = [];
             isRecording = true;
             voiceBtn.classList.add('rec');
@@ -884,7 +889,8 @@
                 stream.getTracks().forEach(t => t.stop());
 
                 if(audioChunks.length === 0) return;
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const recType = mimeType || 'audio/webm';
+                const blob = new Blob(audioChunks, { type: recType });
                 if(blob.size < 100) { toast('التسجيل فارغ'); return; }
                 if(blob.size > 2_000_000) { toast('الصوت كبير جداً (حد 2MB)'); return; }
 
@@ -1511,7 +1517,7 @@
         }
 
         let body = '';
-        if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
+        if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;max-width:min(240px,70vw);border-radius:8px" loading="lazy">`;
         else if(isAudio2) body = `<div class="vp"><button class="vp-play" data-src="${esc(actualText)}"><i class="fas fa-play"></i></button><div class="vp-bar"><div class="vp-progress"></div></div><span class="vp-dur">0:00</span></div>`;
         else if(isImg2) body = `<img src="${esc(actualText)}" onclick="window.open('${esc(actualText)}')" loading="lazy">`;
         else body = linkify(actualText);
