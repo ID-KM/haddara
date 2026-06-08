@@ -285,6 +285,10 @@
         .msg.re .rxn-picker { right:auto;left:100%;margin-left:4px; }
         .msg.se .rxn-picker { left:auto;right:100%;margin-right:4px; }
         .msg .rxn-picker.open { display:flex; }
+        .msg .rxn-picker .rxn.rxn-active {
+            background:rgba(83, 189, 235, .25);border-radius:50%;
+            outline:2px solid #53bdeb;
+        }
         .msg .rxw { position:relative;display:inline-flex; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .bb-body { flex:1; min-width:0; }
@@ -1392,8 +1396,9 @@
                     // Same emoji → remove (toggle off)
                     await sb.from('reactions').delete().eq('id', existing.id);
                 } else {
-                    // Different emoji → replace
-                    await sb.from('reactions').update({ emoji }).eq('id', existing.id);
+                    // Different emoji → replace (delete old + insert new, more reliable than update)
+                    await sb.from('reactions').delete().eq('id', existing.id);
+                    await sb.from('reactions').insert({ message_id: msgId, user_id: userId, emoji });
                 }
             } else {
                 await sb.from('reactions').insert({ message_id: msgId, user_id: userId, emoji });
@@ -1716,7 +1721,21 @@
                 if(p !== addBtn.nextElementSibling) p.classList.remove('open');
             });
             const picker = addBtn.nextElementSibling;
-            if(picker?.classList.contains('rxn-picker')) picker.classList.toggle('open');
+            if(picker?.classList.contains('rxn-picker')) {
+                // Highlight current emoji in picker
+                const msgEl = addBtn.closest('.msg');
+                const msgId = msgEl?.getAttribute('data-id');
+                picker.querySelectorAll('.rxn').forEach(el => el.classList.remove('rxn-active'));
+                if(msgId && sb) {
+                    sb.from('reactions').select('emoji').eq('message_id', msgId).eq('user_id', userId).maybeSingle().then(({data: myRxn}) => {
+                        if(myRxn?.emoji) {
+                            const active = picker.querySelector(`.rxn[data-emoji="${myRxn.emoji}"]`);
+                            if(active) active.classList.add('rxn-active');
+                        }
+                    }).catch(() => {});
+                }
+                picker.classList.toggle('open');
+            }
             e.stopPropagation(); return;
         }
         // Pick emoji from picker
