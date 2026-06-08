@@ -247,6 +247,40 @@
         .msg .mt .act.reply-btn:hover { color:#53bdeb; }
         .msg .mt .db { color:var(--danger); }
         .msg .mt .db:hover { opacity:1; transform:scale(1.15); }
+
+        /* ═══ Reactions ════════════════════════ */
+        .msg .rxns {
+            display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+            margin-top:4px;padding:0 4px;
+        }
+        .msg .rxn {
+            display:inline-flex;align-items:center;gap:3px;
+            padding:2px 8px;border-radius:12px;
+            background:rgba(255,255,255,.08);cursor:pointer;
+            font-size:.78rem;transition:background .15s,transform .1s;
+            user-select:none;line-height:1.4;
+        }
+        .msg .rxn:hover { background:rgba(255,255,255,.15); transform:scale(1.05); }
+        .msg .rxn:active { transform:scale(.9); }
+        .msg .rxn.rxn-mine { background:rgba(0,168,132,.25); }
+        .msg .rxn .rxn-emoji { font-size:.9rem; }
+        .msg .rxn .rxn-count { font-size:.7rem; color:var(--muted); }
+        .msg .rxn-add {
+            display:inline-flex;align-items:center;justify-content:center;
+            width:24px;height:24px;border-radius:50%;
+            background:rgba(255,255,255,.06);cursor:pointer;
+            font-size:.7rem;color:var(--muted);transition:.15s;
+            border:none;padding:0;
+        }
+        .msg .rxn-add:hover { background:rgba(255,255,255,.15); color:var(--text); }
+        .msg .rxn-picker {
+            display:none;align-items:center;gap:3px;
+            padding:4px 6px;border-radius:20px;
+            background:var(--panel);box-shadow:0 2px 12px rgba(0,0,0,.5);
+            position:absolute;z-index:50;top:-40px;left:0;
+        }
+        .msg .rxn-picker.open { display:flex; }
+        .rxn-wrap { position:relative; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .edited { font-size:.6rem; color:var(--muted); margin-right:4px; }
         .msg .rqo {
@@ -626,6 +660,7 @@
     const KEYS = { uid:'nxc_uid', name:'nxc_name', color:'nxc_color', admin:'nxc_admin', lastRead:'nxc_lastRead', draft:'nxc_draft', sound:'nxc_sound' };
     const MAX_IMG = 500_000;
     const PICKER_EMOJIS = ['😊','😂','❤️','🔥','👍','😍','🎉','💀','🙏','😭','😅','🤣','😎','🥺','✨','💪','😏','🤔','👀','😴','🤯','🥳','😈','🫡','🤝','✅','❌','⭐','💯','🔥','⚡','🌈','🎂','🎈','🎁','💎','👑','🚀','💡','📱','💻','🎮','🎵','🎬','📸','✈️','🏠','🌍','💰','🔑','🛡️','⚔️','🧠','🫀','👁️','🦾','🦿','🦷','👅','💋','👂','👃','🦶','👋','✋','🖐️','💔','🖤','💙','💚','💛','🧡','💜','🤎','🩵','💝','🌸','🌺','🌻','🌹','🍀','🌿','☀️','🌙','⭐','🌊','🔥','❄️','🍕','🍔','🌮','🍩','☕','🍺','🥂'];
+    const REACT_EMOJIS = ['👍','❤️','🔥', '😂', '🎉', '😊'];
     const GIPHY_KEY = 's6B4hDSI4W16Mp9IEANSvHP635oWBSL2'; // ← ضع مفتاح GIPHY من https://developers.giphy.com (مجاني)
 
     // ── State ──────────────────────────
@@ -1152,7 +1187,7 @@
         try {
             const { data, error } = await sb
                 .from('messages')
-                .select('*, profiles!left(is_admin)')
+                .select('*, profiles!left(is_admin), reactions(*)')
                 .eq('deleted', false)
                 .eq('room', currentRoom)
                 .order('created_at', { ascending: true })
@@ -1161,7 +1196,21 @@
             const ld = $('loading');
             if(ld) ld.remove();
             if(data) { data.forEach(m => { if(!myMessages.has(m.id)) { m.is_admin = m.profiles?.is_admin || false; renderMessage(m); } }); scrollDown(true); }
-        } catch(e) { console.error(e); toast('فشل تحميل الرسائل'); }
+        } catch(e) {
+            console.error(e);
+            // If reactions table missing, fall back to loading without reactions
+            if(e.message?.includes('relation') || e.message?.includes('does not exist')) {
+                try {
+                    const { data: data2 } = await sb
+                        .from('messages')
+                        .select('*, profiles!left(is_admin)')
+                        .eq('deleted', false).eq('room', currentRoom)
+                        .order('created_at', { ascending: true }).limit(50);
+                    if(data2) { data2.forEach(m => { if(!myMessages.has(m.id)) { m.is_admin = m.profiles?.is_admin || false; renderMessage(m); } }); scrollDown(true); }
+                    toast('⚡ شغل SQL حق reactions فـ Supabase Dashboard', 5000);
+                } catch(e2) { toast('فشل تحميل الرسائل'); }
+            } else { toast('فشل تحميل الرسائل'); }
+        }
     }
 
     // ════════════════════════════════════
@@ -1172,11 +1221,42 @@
         subChannel = sb.channel(`msgs-all-${Date.now()}`)
             .on('postgres_changes',
                 { event: '*', schema: 'public', table: 'messages' },
-                (payload) => {
-                    handleRealtime(payload);
-                }
+                (payload) => { handleRealtime(payload); }
+            )
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'reactions' },
+                (payload) => { handleReactionsRealtime(payload); }
             )
             .subscribe();
+    }
+
+    function handleReactionsRealtime(payload) {
+        const { eventType, new: n, old: o } = payload;
+        const msgId = (n||o)?.message_id;
+        if(!msgId) return;
+        // Re-fetch this message's reactions and re-render the reactions bar
+        sb.from('reactions').select('*').eq('message_id', msgId).then(({data: reactions}) => {
+            const msgEl = document.querySelector(`.msg[data-id="${msgId}"]`);
+            if(!msgEl) return;
+            const rxnsEl = msgEl.querySelector('.rxns');
+            if(!rxnsEl) return;
+            // Replace only the reaction badges (keep the + button and picker)
+            const picker = rxnsEl.querySelector('.rxn-picker');
+            const addBtn = rxnsEl.querySelector('.rxn-add');
+            // Rebuild badges
+            const html = buildReactionsHtml(reactions) || '';
+            // Insert new badges before addBtn
+            const temp = document.createElement('span');
+            temp.innerHTML = html;
+            // Remove old badges (keep .rxn-add and .rxn-picker)
+            Array.from(rxnsEl.children).forEach(child => {
+                if(child !== addBtn && child !== picker && !child.classList.contains('rxn-picker') && child !== addBtn) {
+                    // Check if it's a reaction badge (.rxn with data-emoji)
+                    if(child.matches && child.matches('.rxn[data-emoji]')) child.remove();
+                }
+            });
+            rxnsEl.insertBefore(temp, addBtn);
+        }).catch(() => {});
     }
 
     function handleRealtime(payload) {
@@ -1282,6 +1362,31 @@
     // ════════════════════════════════════
     // 🎨  RENDER MESSAGE
     // ════════════════════════════════════
+
+    function buildReactionsHtml(reactions) {
+        if (!reactions || reactions.length === 0) return '';
+        const map = {};
+        reactions.forEach(r => {
+            if (!map[r.emoji]) map[r.emoji] = { count: 0, mine: false };
+            map[r.emoji].count++;
+            if (r.user_id === userId) map[r.emoji].mine = true;
+        });
+        return Object.entries(map).map(([emoji, info]) =>
+            `<span class="rxn${info.mine ? ' rxn-mine' : ''}" data-emoji="${esc(emoji)}"><span class="rxn-emoji">${emoji}</span><span class="rxn-count">${info.count}</span></span>`
+        ).join('');
+    }
+
+    async function toggleReaction(msgId, emoji) {
+        if(!sb || !userId) return;
+        try {
+            const { data: existing } = await sb.from('reactions')
+                .select('id').eq('message_id', msgId)
+                .eq('user_id', userId).eq('emoji', emoji).maybeSingle();
+            if(existing) { await sb.from('reactions').delete().eq('id', existing.id); }
+            else { await sb.from('reactions').insert({ message_id: msgId, user_id: userId, emoji }); }
+        } catch(e) { toast('فشل التفاعل: ' + e.message); }
+    }
+
     function renderMessage(msg) {
         const isMe = msg.user_id === userId;
         const bc = isMe ? (msg.color||myColor) : (msg.color||'#202c33');
@@ -1343,6 +1448,13 @@
                 ${replyHtml}
                 ${body}
                 <div class="mt">${edited}<span>${time}</span>${actions}</div>
+            </div>
+            <div class="rxns" data-msg-id="${msg.id}">
+                ${buildReactionsHtml(msg.reactions)}
+                <button class="rxn-add" title="تفاعل">+</button>
+                <div class="rxn-picker">
+                    ${REACT_EMOJIS.map(e => `<span class="rxn" data-emoji="${e}">${e}</span>`).join('')}
+                </div>
             </div>`;
 
         chat.appendChild(div);
@@ -1560,6 +1672,42 @@
     chat.addEventListener('click', (e) => {
         const img = e.target.closest('.bb img');
         if(img && img.src.startsWith('data:image')) window.open(img.src);
+    });
+
+    // ════════════════════════════════════
+    // 🤍  REACTIONS (event delegation on chat)
+    // ════════════════════════════════════
+    chat.addEventListener('click', (e) => {
+        // Toggle existing reaction badge
+        const badge = e.target.closest('.rxn[data-emoji]');
+        if(badge && !badge.closest('.rxn-picker')) {
+            const msgId = badge.closest('.msg')?.getAttribute('data-id');
+            if(msgId) { toggleReaction(msgId, badge.dataset.emoji); return; }
+        }
+        // Toggle picker (+ button)
+        const addBtn = e.target.closest('.rxn-add');
+        if(addBtn) {
+            document.querySelectorAll('.rxn-picker.open').forEach(p => {
+                if(p !== addBtn.nextElementSibling) p.classList.remove('open');
+            });
+            const picker = addBtn.nextElementSibling;
+            if(picker?.classList.contains('rxn-picker')) picker.classList.toggle('open');
+            e.stopPropagation(); return;
+        }
+        // Pick emoji from picker
+        const pick = e.target.closest('.rxn-picker .rxn');
+        if(pick) {
+            const msgId = pick.closest('.msg')?.getAttribute('data-id');
+            if(msgId) { toggleReaction(msgId, pick.dataset.emoji); }
+            pick.closest('.rxn-picker')?.classList.remove('open');
+            return;
+        }
+    });
+    // Close reaction pickers on click outside chat
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('.rxns')) {
+            document.querySelectorAll('.rxn-picker.open').forEach(p => p.classList.remove('open'));
+        }
     });
 
     // ════════════════════════════════════
