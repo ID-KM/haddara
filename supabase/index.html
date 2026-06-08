@@ -656,7 +656,7 @@
     function sendGIF(url) {
         gifPicker.classList.remove('open');
         const msg = { text: url, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
-        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
+        if(replyTo) { msg.text = `__R${JSON.stringify({id:replyTo.id,un:replyTo.user_name,txt:replyTo.text})}__|${msg.text}`; cancelReply(); }
         mi.value = ''; saveDraft();
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;
@@ -665,8 +665,7 @@
         playSound('send');
         sb.from('messages').insert({
             text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
-            color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
-            reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
+            color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
         }).select().then(({data, error}) => {
             if(error) { toast('فشل إرسال GIF: '+error.message); return; }
             if(data && data[0] && data[0].id) {
@@ -972,21 +971,29 @@
         const isImg = !isGif && msg.text && msg.text.startsWith('data:image');
         const bstyle = !isMe ? ` style="background:${bc}"` : '';
 
-        // ── Reply Quote ──
+        // ── Reply Quote (from embedded text) ──
         let replyHtml = '';
         let replyData = null;
-        if(msg.reply_to) {
-            try { replyData = typeof msg.reply_to === 'string' ? JSON.parse(msg.reply_to) : msg.reply_to; } catch(e) {}
+        let actualText = msg.text || '';
+        if(actualText.startsWith('__R')) {
+            const end = actualText.indexOf('__|');
+            if(end > 3) {
+                try { replyData = JSON.parse(actualText.substring(3, end)); } catch(e) {}
+                if(replyData && replyData.un) actualText = actualText.substring(end + 3);
+                else { replyData = null; actualText = msg.text || ''; }
+            }
         }
-        if(replyData && replyData.user_name) {
-            const rt = replyData.text ? replyData.text.replace(/^data:image.*/, '🖼️ صورة').replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF').substring(0, 60) : '';
-            replyHtml = `<div class="rqo"><div class="rqn">${esc(replyData.user_name)}</div><span class="rqt">${esc(rt)}</span></div>`;
+        const isGif2 = actualText && (actualText.startsWith('https://') || actualText.startsWith('http://')) && (actualText.includes('giphy.com') || actualText.endsWith('.gif'));
+        const isImg2 = !isGif2 && actualText && actualText.startsWith('data:image');
+        if(replyData && replyData.un) {
+            const rt = replyData.txt ? replyData.txt.replace(/^data:image.*/, '🖼️ صورة').replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF').substring(0, 60) : '';
+            replyHtml = `<div class="rqo"><div class="rqn">${esc(replyData.un)}</div><span class="rqt">${esc(rt)}</span></div>`;
         }
 
         let body = '';
-        if(isGif) body = `<img src="${esc(msg.text)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
-        else if(isImg) body = `<img src="${esc(msg.text)}" onclick="window.open('${esc(msg.text)}')" loading="lazy">`;
-        else body = linkify(msg.text||'');
+        if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
+        else if(isImg2) body = `<img src="${esc(actualText)}" onclick="window.open('${esc(actualText)}')" loading="lazy">`;
+        else body = linkify(actualText);
 
         const time = msg.created_at
             ? new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
@@ -1102,7 +1109,7 @@
         if(text.length > 10000) { toast('الرسالة طويلة جداً'); return; }
 
         const msg = { text, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
-        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
+        if(replyTo) { msg.text = `__R${JSON.stringify({id:replyTo.id,un:replyTo.user_name,txt:replyTo.text})}__|${msg.text}`; cancelReply(); }
         mi.value = ''; saveDraft();
 
         // Optimistic render (appears immediately)
@@ -1115,8 +1122,7 @@
         try {
             const { data, error } = await sb.from('messages').insert({
                 text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
-                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
-                reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
+                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
             }).select();
             if(error) throw error;
             // Replace temp ID with real DB ID so delete/edit work immediately
@@ -1139,7 +1145,7 @@
     async function sendImage(base64) {
         if(base64.length > MAX_IMG) { toast('حجم الصورة كبير جداً (500KB كحد أقصى)'); return; }
         const msg = { text:base64, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
-        if(replyTo) { msg.reply_to = replyTo; cancelReply(); }
+        if(replyTo) { msg.text = `__R${JSON.stringify({id:replyTo.id,un:replyTo.user_name,txt:replyTo.text})}__|${msg.text}`; cancelReply(); }
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;
         renderMessage(msg);
@@ -1149,8 +1155,7 @@
         try {
             const { data, error } = await sb.from('messages').insert({
                 text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
-                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted,
-                reply_to: msg.reply_to ? JSON.stringify(msg.reply_to) : null
+                color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
             }).select();
             if(error) throw error;
             // Replace temp ID with real DB ID so delete/edit work immediately
