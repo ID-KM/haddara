@@ -279,10 +279,11 @@
             display:none;align-items:center;gap:2px;
             padding:3px 5px;border-radius:16px;
             background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.5);
-            position:absolute;z-index:999;bottom:100%;right:0;
-            margin-bottom:4px;white-space:nowrap;
+            position:absolute;z-index:999;top:50%;transform:translateY(-50%);
+            white-space:nowrap;
         }
-        .msg.se .rxn-picker { bottom:auto;right:auto;left:100%;top:0;margin-bottom:0; }
+        .msg.re .rxn-picker { right:100%;left:auto;margin-right:4px; }
+        .msg.se .rxn-picker { left:100%;right:auto;margin-left:4px; }
         .msg .rxn-picker.open { display:flex; }
         .msg .rxw { position:relative;display:inline-flex; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
