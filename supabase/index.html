@@ -230,9 +230,10 @@
             padding:7px 12px;border-radius:8px;font-size:.95rem;
             line-height:1.5;word-break:break-word;
             box-shadow:0 1px 2px rgba(0,0,0,.2);position:relative;
+            display:flex;flex-direction:column;
         }
-        .msg.se .bb { background:var(--sent); border-radius:8px 8px 2px 8px; padding-bottom:26px; }
-        .msg.re .bb { background:var(--panel); border-radius:8px 8px 8px 2px; padding-bottom:26px; }
+        .msg.se .bb { background:var(--sent); border-radius:8px 8px 2px 8px; }
+        .msg.re .bb { background:var(--panel); border-radius:8px 8px 8px 2px; }
         .msg .bb img { max-width:100%; max-height:300px; border-radius:4px; margin:4px 0; display:block; cursor:pointer; }
         .msg .mt {
             font-size:.6rem; color:rgba(255,255,255,.5);
@@ -251,10 +252,9 @@
         /* ═══ Reactions (inside .bb) ══════════════════ */
         .msg .rxns {
             display:flex;flex-wrap:wrap;align-items:center;gap:3px;
-            position:absolute;bottom:4px;right:6px;
-            max-width:100%;direction:ltr;
+            margin-top:3px;align-self:flex-end;max-width:100%;direction:ltr;
         }
-        .msg.se .rxns { right:auto;left:6px; }
+        .msg.se .rxns { align-self:flex-start; }
         .msg .rxn {
             display:inline-flex;align-items:center;gap:2px;
             padding:1px 6px;border-radius:10px;
@@ -279,11 +279,12 @@
             display:none;align-items:center;gap:2px;
             padding:3px 5px;border-radius:16px;
             background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.5);
-            position:absolute;z-index:50;bottom:100%;right:0;
-            margin-bottom:4px;white-space:nowrap;
+            position:absolute;z-index:50;bottom:calc(100% + 4px);right:0;
+            white-space:nowrap;
         }
         .msg.se .rxn-picker { right:auto;left:0; }
         .msg .rxn-picker.open { display:flex; }
+        .msg .rxns { position:relative; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .edited { font-size:.6rem; color:var(--muted); margin-right:4px; }
         .msg .rqo {
@@ -1240,25 +1241,7 @@
         // Re-fetch this message's reactions and re-render the reactions bar
         sb.from('reactions').select('*').eq('message_id', msgId).then(({data: reactions}) => {
             const msgEl = document.querySelector(`.msg[data-id="${msgId}"]`);
-            if(!msgEl) return;
-            const rxnsEl = msgEl.querySelector('.rxns');
-            if(!rxnsEl) return;
-            // Replace only the reaction badges (keep the + button and picker)
-            const picker = rxnsEl.querySelector('.rxn-picker');
-            const addBtn = rxnsEl.querySelector('.rxn-add');
-            // Rebuild badges
-            const html = buildReactionsHtml(reactions) || '';
-            // Insert new badges before addBtn
-            const temp = document.createElement('span');
-            temp.innerHTML = html;
-            // Remove old badges (keep .rxn-add and .rxn-picker)
-            Array.from(rxnsEl.children).forEach(child => {
-                if(child !== addBtn && child !== picker && !child.classList.contains('rxn-picker') && child !== addBtn) {
-                    // Check if it's a reaction badge (.rxn with data-emoji)
-                    if(child.matches && child.matches('.rxn[data-emoji]')) child.remove();
-                }
-            });
-            rxnsEl.insertBefore(temp, addBtn);
+            if(msgEl && reactions) updateReactionsBar(msgEl, reactions);
         }).catch(() => {});
     }
 
@@ -1379,14 +1362,47 @@
         ).join('');
     }
 
+    function updateReactionsBar(msgEl, reactions) {
+        const rxnsEl = msgEl.querySelector('.rxns');
+        if(!rxnsEl) return;
+        const picker = rxnsEl.querySelector('.rxn-picker');
+        const addBtn = rxnsEl.querySelector('.rxn-add');
+        const html = buildReactionsHtml(reactions) || '';
+        // Remove old badges (keep .rxn-add and .rxn-picker)
+        Array.from(rxnsEl.children).forEach(child => {
+            if(child !== addBtn && child !== picker) {
+                if(child.matches && child.matches('.rxn[data-emoji]')) child.remove();
+            }
+        });
+        // Insert new badges before addBtn
+        const temp = document.createElement('span');
+        temp.innerHTML = html;
+        Array.from(temp.children).forEach(badge => rxnsEl.insertBefore(badge, addBtn));
+    }
+
     async function toggleReaction(msgId, emoji) {
         if(!sb || !userId) return;
         try {
             const { data: existing } = await sb.from('reactions')
-                .select('id').eq('message_id', msgId)
-                .eq('user_id', userId).eq('emoji', emoji).maybeSingle();
-            if(existing) { await sb.from('reactions').delete().eq('id', existing.id); }
-            else { await sb.from('reactions').insert({ message_id: msgId, user_id: userId, emoji }); }
+                .select('id,emoji').eq('message_id', msgId)
+                .eq('user_id', userId).maybeSingle();
+            if(existing) {
+                if(existing.emoji === emoji) {
+                    // Same emoji → remove (toggle off)
+                    await sb.from('reactions').delete().eq('id', existing.id);
+                } else {
+                    // Different emoji → replace
+                    await sb.from('reactions').update({ emoji }).eq('id', existing.id);
+                }
+            } else {
+                await sb.from('reactions').insert({ message_id: msgId, user_id: userId, emoji });
+            }
+            // Immediate UI update (don't wait for realtime)
+            const msgEl = document.querySelector(`.msg[data-id="${msgId}"]`);
+            if(msgEl) {
+                const { data: reactions } = await sb.from('reactions').select('*').eq('message_id', msgId);
+                if(reactions) updateReactionsBar(msgEl, reactions);
+            }
         } catch(e) { toast('فشل التفاعل: ' + e.message); }
     }
 
