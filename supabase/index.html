@@ -769,7 +769,7 @@
                     const tempId = 'temp_' + Date.now();
                     msg.id = tempId;
                     renderMessage(msg);
-                    scrollDown();
+                    scrollDown(true);
                     playSound('send');
                     const { error: insErr } = await sb.from('messages').insert({
                         text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
@@ -847,7 +847,7 @@
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;
         renderMessage(msg);
-        scrollDown();
+        scrollDown(true);
         playSound('send');
         sb.from('messages').insert({
             text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
@@ -1128,7 +1128,7 @@
             if(error) throw error;
             const ld = $('loading');
             if(ld) ld.remove();
-            if(data) { data.forEach(m => { if(!myMessages.has(m.id)) { m.is_admin = m.profiles?.is_admin || false; renderMessage(m); } }); scrollDown(); }
+            if(data) { data.forEach(m => { if(!myMessages.has(m.id)) { m.is_admin = m.profiles?.is_admin || false; renderMessage(m); } }); scrollDown(true); }
         } catch(e) { console.error(e); toast('فشل تحميل الرسائل'); }
     }
 
@@ -1343,9 +1343,9 @@
         }
     }
 
-    function scrollDown() {
+    function scrollDown(force) {
         requestAnimationFrame(() => {
-            if(isNearBottom()) chat.scrollTop = chat.scrollHeight;
+            if(force || isNearBottom()) chat.scrollTop = chat.scrollHeight;
         });
     }
 
@@ -1407,7 +1407,7 @@
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;            // ← _tempId → id
         renderMessage(msg);
-        scrollDown();
+        scrollDown(true);
         playSound('send');
 
         try {
@@ -1440,7 +1440,7 @@
         const tempId = 'temp_' + Date.now();
         msg.id = tempId;
         renderMessage(msg);
-        scrollDown();
+        scrollDown(true);
         playSound('send');
 
         try {
