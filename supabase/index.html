@@ -59,7 +59,6 @@
         }
 
         /* ═══ App Layout ══════════════════════ */
-        .app { width:100%; height:100vh; height:100dvh; background:var(--bg); display:flex; flex-direction:column; }
         body { overscroll-behavior:none; -webkit-overflow-scrolling:touch; }
 
         /* ═══ Header ══════════════════════════ */
@@ -429,6 +428,7 @@
             .iw input { padding:14px 0; font-size:1rem; }
             .ib { width:40px;height:40px; font-size:1.2rem; }
             header { padding:8px 10px; }
+            .hl { overflow:visible; }
             #sidebar.open { width:100%; }
             #chat { padding:12px 8px; }
             #emoji-picker { left:6px; right:6px; max-width:calc(100vw - 12px); }
@@ -1221,9 +1221,9 @@
             const btn = document.createElement('button');
             btn.id = 'backToGeneral';
             btn.className = 'ib';
-            btn.innerHTML = '<i class="fas fa-arrow-right"></i>';
+            btn.innerHTML = '<i class="fas fa-arrow-right"></i> رجوع';
             btn.title = 'العودة للغرفة العامة';
-            btn.style.cssText = 'font-size:.8rem;margin-left:4px;';
+            btn.style.cssText = 'font-size:.8rem;margin-left:4px;display:inline-flex;align-items:center;gap:4px;width:auto;padding:0 6px;border-radius:18px;';
             btn.addEventListener('click', switchToGeneral);
             document.querySelector('.hl').insertBefore(btn, document.querySelector('.ri'));
         } else if(room === 'general') {
