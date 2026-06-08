@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>هدرة</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
     <style>
         /* ═══ Reset & Theme ═══════════════════ */
@@ -420,6 +421,7 @@
             .msg .mt .act { font-size:.75rem; padding:6px; }
             .card { width:95%; padding:2rem 1.5rem; }
             .card h1 { font-size:1.2rem; }
+            .card .fa-comments { font-size:2rem !important; }
             .card p { margin-bottom:1rem; }
             .card input { padding:12px 14px; font-size:1rem; }
             .card button { padding:12px; }
@@ -567,7 +569,7 @@
 <!-- ═══ Auth Screen ═══════════════ -->
 <div id="screen">
     <div class="card">
-        💬<br>
+        <i class="fas fa-comments" style="font-size:2.8rem;color:var(--primary)"></i>
         <h1>هدرة</h1>
         <p>سجّل الدخول أو أنشئ حساباً</p>
         <div class="tabs">
@@ -614,8 +616,8 @@
             </div>
         </div>
         <div class="ht">
-            <button class="ib onl" id="onlineToggle" title="المحادثات">💬<span class="badge" id="onlineBadge"></span></button>
-            <button class="ib" id="soundToggle" title="الصوت">🔊</button>
+            <button class="ib onl" id="onlineToggle" title="المحادثات"><i class="fas fa-comment-dots"></i><span class="badge" id="onlineBadge"></span></button>
+            <button class="ib" id="soundToggle" title="الصوت"><i class="fas fa-volume-up"></i></button>
         </div>
     </header>
     <!-- ═══ Main Layout ═══════════════════════ -->
@@ -629,7 +631,7 @@
 
             <!-- ═══ Scroll-to-bottom ═══════════ -->
             <div id="scroll-bottom" class="sb-hide">
-                ▼
+                <i class="fas fa-chevron-down"></i>
                 <span id="sb-count" class="sb-hide">0</span>
             </div>
 
@@ -641,7 +643,7 @@
         <!-- ═══ Sidebar (second → left in RTL) ═══ -->
         <div id="sidebar">
             <div class="sh">
-                💬
+                <i class="fas fa-comment-dots"></i>
                 <span id="sidebarTitle">المحادثات</span>
                 <span style="flex:1"></span>
                 <button id="sidebarClose" class="ib" style="width:auto;height:32px;font-size:.75rem;border-radius:16px;padding:0 10px;color:#fff;background:rgba(255,255,255,.08);gap:4px;">✕ إغلاق</button>
@@ -653,13 +655,13 @@
     </div>
 
     <footer style="position:relative">
-        <button class="ib sb" id="snd">📩</button>
+        <button class="ib sb" id="snd"><i class="fas fa-paper-plane"></i></button>
         <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
         <input type="file" id="fi" hidden accept="image/*" capture="environment">
-        <label for="fi" class="ib" title="صورة">📎</label>
-        <button class="ib" id="voiceBtn" title="رسالة صوتية">🎤</button>
-        <button class="ib" id="gifBtn" title="GIF">🖼️</button>
-        <button class="ib" id="emojiBtn" title="إيموجي">😊</button>
+        <label for="fi" class="ib" title="صورة"><i class="fas fa-paperclip"></i></label>
+        <button class="ib" id="voiceBtn" title="رسالة صوتية"><i class="fas fa-microphone"></i></button>
+        <button class="ib" id="gifBtn" title="GIF"><i class="fas fa-icons"></i></button>
+        <button class="ib" id="emojiBtn" title="إيموجي"><i class="fas fa-smile"></i></button>
 
         <!-- Emoji Picker -->
         <div id="emoji-picker">
@@ -681,7 +683,7 @@
             <div class="rqn" id="replyName"></div>
             <div class="rqt" id="replyText"></div>
         </div>
-        <button class="rc" id="replyClose">✕</button>
+        <button class="rc" id="replyClose"><i class="fas fa-times"></i></button>
     </div>
 </div>
 
@@ -1056,7 +1058,7 @@
         // DMs section
         const filteredDMs = dmUsers.filter(filter);
         if(filteredDMs.length > 0 || sq) {
-            if(!sq) html += `<div class="section-divider" data-section="dms">▼ المحادثات <span class="sd-count">${filteredDMs.length}</span></div>`;
+            if(!sq) html += `<div class="section-divider" data-section="dms"><i class="fas fa-chevron-down"></i> المحادثات <span class="sd-count">${filteredDMs.length}</span></div>`;
             filteredDMs.forEach(u => {
                 const initial = (u.username||'?').charAt(0);
                 const unread = unreadCounts[u.id] || 0;
@@ -1078,14 +1080,14 @@
 
         // Empty state
         if(filteredDMs.length === 0 && !sq) {
-            html += '<div class="dm-empty">💬<br>لا توجد محادثات بعد<br><span style="font-size:.7rem;color:var(--muted)">انقر على مستخدم من القائمة لبدء محادثة</span></div>';
+            html += `<div class="dm-empty"><i class="fas fa-comment-dots" style="font-size:1.5rem;opacity:.5;margin-bottom:8px;display:block"></i>لا توجد محادثات بعد<br><span style="font-size:.7rem;color:var(--muted)">انقر على مستخدم من القائمة لبدء محادثة</span></div>`;
         }
 
         // All online users
         if(!sq) {
             const filteredRest = restUsers.filter(filter);
             const collapsed = allOnlineCollapsed ? ' collapsed' : '';
-            html += `<div class="section-divider${collapsed}" id="allOnlineToggle">▼ جميع المتصلين <span class="sd-count">${filteredRest.length}</span></div>`;
+            html += `<div class="section-divider${collapsed}" id="allOnlineToggle"><i class="fas fa-chevron-down"></i> جميع المتصلين <span class="sd-count">${filteredRest.length}</span></div>`;
             if(!allOnlineCollapsed) {
                 filteredRest.forEach(u => {
                     const initial = (u.username||'?').charAt(0);
@@ -1231,7 +1233,7 @@
             const btn = document.createElement('button');
             btn.id = 'backToGeneral';
             btn.className = 'ib';
-            btn.innerHTML = '← رجوع';
+            btn.innerHTML = '<i class="fas fa-arrow-right"></i> رجوع';
             btn.title = 'العودة للغرفة العامة';
             btn.style.cssText = 'font-size:.8rem;margin-left:4px;display:inline-flex;align-items:center;gap:4px;width:auto;padding:0 6px;border-radius:18px;';
             btn.addEventListener('click', switchToGeneral);
@@ -1516,7 +1518,7 @@
 
         let body = '';
         if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;max-width:min(240px,70vw);border-radius:8px" loading="lazy">`;
-        else if(isAudio2) body = `<div class="vp"><button class="vp-play" data-src="${esc(actualText)}">▶</button><div class="vp-bar"><div class="vp-progress"></div></div><span class="vp-dur">0:00</span></div>`;
+        else if(isAudio2) body = `<div class="vp"><button class="vp-play" data-src="${esc(actualText)}"><i class="fas fa-play"></i></button><div class="vp-bar"><div class="vp-progress"></div></div><span class="vp-dur">0:00</span></div>`;
         else if(isImg2) body = `<img src="${esc(actualText)}" onclick="window.open('${esc(actualText)}')" loading="lazy">`;
         else body = linkify(actualText);
 
@@ -1524,14 +1526,14 @@
             ? new Date(msg.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
 
         let actions = '';
-        actions += `<button class="act reply-btn" data-reply="${msg.id}" title="رد">↩️</button>`;
+        actions += `<button class="act reply-btn" data-reply="${msg.id}" title="رد"><i class="fas fa-reply"></i></button>`;
         if(isMe) {
-            actions += `<button class="act" data-edit="${msg.id}" title="تعديل">✏️</button>`;
-            actions += `<button class="act db" data-del="${msg.id}" title="حذف">🗑️</button>`;
+            actions += `<button class="act" data-edit="${msg.id}" title="تعديل"><i class="fas fa-pen"></i></button>`;
+            actions += `<button class="act db" data-del="${msg.id}" title="حذف"><i class="fas fa-trash"></i></button>`;
+        } else if(isAdmin) {
+            actions += `<button class="act admin-del" data-admin-del="${msg.id}" title="حذف (آدمين)"><i class="fas fa-trash"></i></button>`;
         }
-        if(isAdmin && !isMe) {
-            actions += `<button class="act admin-del" data-admin-del="${msg.id}" title="حذف (آدمين)">🗑️</button>`;
-        }
+
         const edited = msg.edited_at ? '<span class="edited">· معدلة</span>' : '';
         const senderName = msg.user_name || 'مجهول';
         const adminBadge = msg.is_admin ? '<span class="admin-badge">👑</span>' : '';
@@ -1852,14 +1854,14 @@
     // 🔊  SOUND TOGGLE
     // ════════════════════════════════════
     const savedSound = localStorage.getItem(KEYS.sound);
-    if(savedSound === 'off') { soundOn = false; soundToggle.classList.remove('on'); soundToggle.innerHTML = '🔇'; }
-    else { soundToggle.classList.add('on'); soundToggle.innerHTML = '🔊'; }
+    if(savedSound === 'off') { soundOn = false; soundToggle.classList.remove('on'); soundToggle.innerHTML = '<i class="fas fa-volume-mute"></i>'; }
+    else { soundToggle.classList.add('on'); soundToggle.innerHTML = '<i class="fas fa-volume-up"></i>'; }
 
     soundToggle.addEventListener('click', () => {
         soundOn = !soundOn;
         localStorage.setItem(KEYS.sound, soundOn ? 'on' : 'off');
         soundToggle.classList.toggle('on', soundOn);
-        soundToggle.innerHTML = soundOn ? '🔊' : '🔇';
+        soundToggle.innerHTML = soundOn ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
     });
 
     // ════════════════════════════════════
@@ -2015,11 +2017,11 @@
                 if(!currentAudio.paused) {
                     currentAudio.pause();
                     playBtn.classList.remove('playing');
-                    playBtn.innerHTML = '▶';
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
                 } else {
                     currentAudio.play();
                     playBtn.classList.add('playing');
-                    playBtn.innerHTML = '⏸';
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 }
                 return;
             }
@@ -2030,7 +2032,7 @@
                 currentAudio = null;
                 document.querySelectorAll('.vp-play.playing').forEach(b => {
                     b.classList.remove('playing');
-                    b.innerHTML = '▶';
+                    b.innerHTML = '<i class="fas fa-play"></i>';
                 });
             }
 
@@ -2040,7 +2042,7 @@
             currentAudio = audio;
             audio.play();
             playBtn.classList.add('playing');
-            playBtn.innerHTML = '⏸';
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
 
             audio.addEventListener('loadedmetadata', () => {
                 if(!audio.paused) {
@@ -2062,7 +2064,7 @@
 
             audio.addEventListener('ended', () => {
                 playBtn.classList.remove('playing');
-                playBtn.innerHTML = '▶';
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
                 bar.style.width = '0%';
                 if(audio.duration) {
                     const m = Math.floor(audio.duration/60);
