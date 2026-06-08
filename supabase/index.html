@@ -642,6 +642,8 @@
             <div class="sh">
                 <i class="fas fa-comment-dots"></i>
                 <span id="sidebarTitle">المحادثات</span>
+                <span style="flex:1"></span>
+                <button id="sidebarClose" class="ib" style="width:30px;height:30px;font-size:.85rem;line-height:1;">✕</button>
             </div>
             <input class="sb-search" id="dmSearch" placeholder="🔍 بحث في المحادثات..." autocomplete="off">
             <div id="online-list"></div>
@@ -1192,6 +1194,9 @@
     onlineToggle.addEventListener('click', () => {
         sidebar.classList.toggle('open');
     });
+    // Sidebar close button (X)
+    const sidebarClose = document.getElementById('sidebarClose');
+    if(sidebarClose) sidebarClose.addEventListener('click', () => sidebar.classList.remove('open'));
 
     // ════════════════════════════════════
     // 💬  ROOM SYSTEM
