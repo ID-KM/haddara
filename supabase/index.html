@@ -1201,7 +1201,8 @@
         const room = `dm:${parts[0]}_${parts[1]}`;
         const label = `محادثة مع ${targetName}`;
         switchRoom(room, label);
-        // Don't close sidebar - keep DM list visible
+        // Close sidebar on mobile so chat is visible
+        if(window.innerWidth <= 600) sidebar.classList.remove('open');
         // Clear unread for this user
         unreadCounts[targetId] = 0;
         renderOnlineUsers();
