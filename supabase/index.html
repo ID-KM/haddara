@@ -98,18 +98,31 @@
         /* ═══ Sidebar ════════════════════════ */
         #sidebar {
             width:0; overflow:hidden; transition:width .35s ease;
-            background:var(--panel); border-right:1px solid rgba(255,255,255,.05);
+            background:var(--panel); border-left:1px solid rgba(255,255,255,.05);
             flex-shrink:0; display:flex; flex-direction:column;
         }
         #sidebar.open {
             width:280px; overflow-y:auto; overflow-x:hidden;
         }
+        .sb-search {
+            width:100%; padding:10px 12px; border:none; outline:none;
+            background:transparent; color:var(--text); font-size:.82rem;
+            box-sizing:border-box; border-bottom:1px solid rgba(255,255,255,.06);
+        }
+        .sb-search::placeholder { color:var(--muted); }
         #sidebar .sh {
             padding:12px 16px; font-size:.8rem; font-weight:bold;
             color:var(--muted); border-bottom:1px solid rgba(255,255,255,.05);
             display:flex; align-items:center; gap:8px; flex-shrink:0;
         }
         #sidebar .sh i { font-size:.85rem; }
+        #sidebar .sb-search {
+            margin:0 12px 8px; padding:10px 14px; border-radius:8px;
+            border:none; background:var(--input); color:var(--text);
+            font-size:.85rem; outline:none; direction:rtl;
+        }
+        #sidebar .sb-search::placeholder { color:var(--muted); }
+        #sidebar .sb-search:focus { background:#2f3d46; }
         #sidebar .u {
             display:flex; align-items:center; gap:10px;
             padding:10px 16px; cursor:pointer;
@@ -117,11 +130,18 @@
         }
         #sidebar .u:hover { background:rgba(255,255,255,.05); }
         #sidebar .u .ud {
-            width:36px;height:36px;border-radius:50%;flex-shrink:0;
+            width:40px;height:40px;border-radius:50%;flex-shrink:0;
             display:flex;align-items:center;justify-content:center;
-            font-weight:bold; font-size:.85rem;
+            font-weight:bold; font-size:.9rem;
         }
-        #sidebar .u .un { font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+        #sidebar .u .uib {
+            flex:1;overflow:hidden;display:flex;flex-direction:column;
+            gap:2px;min-width:0;
+        }
+        #sidebar .u .un {
+            font-size:.85rem;overflow:hidden;
+            text-overflow:ellipsis;white-space:nowrap;
+        }
         #sidebar .u .ustat { width:8px;height:8px;border-radius:50%;flex-shrink:0; background:#4caf50; }
         #sidebar .u .ubdg {
             position:absolute; top:4px; right:4px;
@@ -138,6 +158,30 @@
         #sidebar .u.me { border-bottom:1px solid rgba(255,255,255,.05); cursor:default; }
         #sidebar .u.me:hover { background:transparent; }
         #sidebar .admin-tag { font-size:.65rem; }
+        #sidebar .section-divider {
+            display:flex;align-items:center;gap:8px;
+            padding:10px 16px 6px;font-size:.7rem;font-weight:bold;
+            color:var(--muted);cursor:pointer;user-select:none;
+            border-top:1px solid rgba(255,255,255,.04);flex-shrink:0;
+        }
+        #sidebar .section-divider:hover { color:var(--text); }
+        #sidebar .section-divider i { font-size:.65rem; transition:transform .2s; }
+        #sidebar .section-divider.collapsed i { transform:rotate(-90deg); }
+        #sidebar .section-divider .sd-count {
+            font-size:.65rem;background:rgba(255,255,255,.08);
+            padding:0 8px;border-radius:8px;color:var(--muted);
+        }
+        #sidebar .u .uprev {
+            font-size:.7rem;color:var(--muted);overflow:hidden;
+            text-overflow:ellipsis;white-space:nowrap;direction:rtl;
+        }
+        #sidebar .u .utime {
+            font-size:.6rem;color:var(--muted);flex-shrink:0;direction:ltr;
+        }
+        #sidebar .dm-empty {
+            padding:20px 16px;text-align:center;color:var(--muted);
+            font-size:.78rem;line-height:1.5;
+        }
 
         /* ═══ Chat ════════════════════════════ */
         #chat-wrap {
@@ -294,10 +338,43 @@
         /* ═══ Voice Recording ═══════════════════ */
         #voiceBtn.rec { color:#ef5350 !important; animation:pulse 1s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-        .msg audio {
-            max-width:220px;height:40px;border-radius:6px;display:block;
+
+        /* ═══ Custom Voice Player (Telegram Style) ════ */
+        .vp {
+            display:flex;align-items:center;gap:8px;
+            width:200px;padding:3px 6px 3px 3px;
+            border-radius:20px;direction:ltr;
         }
-        .msg audio::-webkit-media-controls-panel { background:var(--sent); }
+        .vp-play {
+            width:32px;height:32px;border-radius:50%;border:none;
+            background:var(--primary);color:#fff;
+            cursor:pointer;display:flex;align-items:center;
+            justify-content:center;font-size:.75rem;flex-shrink:0;
+            transition:opacity .2s,transform .12s;
+            opacity:.9;
+        }
+        .vp-play:hover { opacity:1; }
+        .vp-play:active { transform:scale(.88); }
+        .vp-bar {
+            flex:1;height:3px;border-radius:2px;
+            background:rgba(255,255,255,.18);cursor:pointer;
+            position:relative;overflow:hidden;
+        }
+        .vp-progress {
+            height:100%;border-radius:2px;
+            background:var(--primary);width:0%;
+            transition:width .2s linear;
+        }
+        .vp-dur {
+            font-size:.65rem;color:rgba(255,255,255,.45);
+            min-width:32px;text-align:right;direction:ltr;
+            font-variant-numeric:tabular-nums;
+        }
+        .msg.se .vp-play { background:rgba(255,255,255,.25); }
+        .msg.se .vp-progress { background:rgba(255,255,255,.7); }
+        .msg.se .vp-bar { background:rgba(255,255,255,.15); }
+        .msg.re .vp-play { background:var(--primary); }
+        .msg.re .vp-progress { background:var(--primary); }
 
         /* ═══ Edit Modal ══════════════════════ */
         #edit-overlay {
@@ -429,20 +506,14 @@
             </div>
         </div>
         <div class="ht">
-            <button class="ib onl" id="onlineToggle" title="المتصلون"><i class="fas fa-users"></i><span class="badge" id="onlineBadge"></span></button>
+            <button class="ib onl" id="onlineToggle" title="المحادثات"><i class="fas fa-comment-dots"></i><span class="badge" id="onlineBadge"></span></button>
             <button class="ib" id="soundToggle" title="الصوت"><i class="fas fa-volume-up"></i></button>
         </div>
     </header>
     <!-- ═══ Main Layout ═══════════════════════ -->
     <div class="main">
 
-        <!-- ═══ Sidebar (Users) ═══════════════ -->
-        <div id="sidebar">
-            <div class="sh"><i class="fas fa-users"></i> المستخدمون</div>
-            <div id="online-list"></div>
-        </div>
-
-        <!-- Chat Area -->
+        <!-- Chat Area (first → right in RTL) -->
         <div id="chat-wrap">
 
             <!-- ═══ Chat Messages ═══════════════ -->
@@ -453,7 +524,18 @@
 
         </div>
 
+        <!-- ═══ Sidebar (second → left in RTL) ═══ -->
+        <div id="sidebar">
+            <div class="sh">
+                <i class="fas fa-comment-dots"></i>
+                <span id="sidebarTitle">المحادثات</span>
+            </div>
+            <input class="sb-search" id="dmSearch" placeholder="🔍 بحث في المحادثات..." autocomplete="off">
+            <div id="online-list"></div>
+        </div>
+
     </div>
+
     <footer style="position:relative">
         <button class="ib sb" id="snd"><i class="fas fa-paper-plane"></i></button>
         <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
@@ -527,6 +609,7 @@
     let unreadCounts = {}; // { userId: count }
     let lastDmTime = {};  // { userId: timestamp }
     let replyTo = null;   // { id, text, user_id, user_name }
+    let dmPreview = {};   // { userId: { text, time } }
     function getDmPartner(room, myId) {
         const p = room.replace('dm:','').split('_');
         return p[0] === myId ? p[1] : p[0];
@@ -785,49 +868,114 @@
 
     // ════════════════════════════════════
     // 👥  ONLINE / ALL USERS
-    // ════════════════════════════════════
+    let allOnlineCollapsed = false;
+
     function renderOnlineUsers() {
-        // Sort: users with recent DMs first, then alphabetically
         const me = allUsers.find(u => u.id === userId);
         let others = allUsers.filter(u => u.id !== userId);
-        others.sort((a, b) => {
-            const tA = lastDmTime[a.id] || 0;
-            const tB = lastDmTime[b.id] || 0;
-            if(tA !== tB) return tB - tA; // most recent first
-            return (a.username||'').localeCompare(b.username||'');
-        });
+
+        const dmUsers = others.filter(u => lastDmTime[u.id]);
+        const restUsers = others.filter(u => !lastDmTime[u.id]);
+
+        dmUsers.sort((a, b) => (lastDmTime[b.id]||0) - (lastDmTime[a.id]||0));
+        restUsers.sort((a, b) => (a.username||'').localeCompare(b.username||''));
+
+        const sq = (document.getElementById('dmSearch')?.value||'').trim().toLowerCase();
+        const filter = u => !sq || (u.username||'').toLowerCase().includes(sq);
 
         let html = '';
-        // Me first
-        if(me) {
-            html += `<div class="u me"><div class="ud" style="background:${me.color}">${esc(me.username?.charAt(0)||'?')}</div><div class="un">${esc(me.username)} <span class="admin-tag">${me.is_admin?'👑 آدمين':''}</span><span style="font-size:.7rem;color:var(--muted)">(أنت)</span></div><div class="ustat online"></div></div>`;
-        }
-        // Others
-        others.forEach(u => {
-            const initial = (u.username||'?').charAt(0);
-            const unread = unreadCounts[u.id] || 0;
-            const badge = unread > 0 ? `<span class="ubdg">${unread > 99 ? '99+' : unread}</span>` : '';
-            html += `<div class="u" data-startdm="${u.id}" data-dmname="${esc(u.username||'')}" data-dmcolor="${u.color}">
-                <div class="ud" style="background:${u.color}">${esc(initial)}</div>
-                <div class="un">${esc(u.username||'مجهول')} <span class="admin-tag">${u.is_admin?'👑 آدمين':''}</span></div>
+        // Me
+        if(me && !sq) {
+            html += `<div class="u me">
+                <div class="ud" style="background:${me.color}">${esc(me.username?.charAt(0)||'?')}</div>
+                <div class="uib"><div class="un">${esc(me.username)} <span class="admin-tag">${me.is_admin?'👑 آدمين':''}</span></div></div>
                 <div class="ustat online"></div>
-                ${badge}
-                <span class="dmic"><i class="fas fa-comment-dots"></i></span>
             </div>`;
-        });
-        if(others.length === 0 && !me) html = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">لا يوجد مستخدمون آخرون</div>';
+        }
+
+        // DMs section
+        const filteredDMs = dmUsers.filter(filter);
+        if(filteredDMs.length > 0 || sq) {
+            if(!sq) html += `<div class="section-divider" data-section="dms"><i class="fas fa-chevron-down"></i> المحادثات <span class="sd-count">${filteredDMs.length}</span></div>`;
+            filteredDMs.forEach(u => {
+                const initial = (u.username||'?').charAt(0);
+                const unread = unreadCounts[u.id] || 0;
+                const badge = unread > 0 ? `<span class="ubdg">${unread > 99 ? '99+' : unread}</span>` : '';
+                const prev = dmPreview[u.id];
+                const preview = prev ? esc(prev.text.substring(0,50)) : '';
+                const time = prev ? formatTime(prev.time) : '';
+                html += `<div class="u" data-startdm="${u.id}" data-dmname="${esc(u.username||'')}">
+                    <div class="ud" style="background:${u.color}">${esc(initial)}</div>
+                    <div class="uib">
+                        <div class="un">${esc(u.username||'مجهول')} <span class="admin-tag">${u.is_admin?'👑':''}</span></div>
+                        <div class="uprev">${preview||'🖼️ صورة'}</div>
+                    </div>
+                    ${time ? `<span class="utime">${time}</span>` : ''}
+                    ${badge}
+                </div>`;
+            });
+        }
+
+        // Empty state
+        if(filteredDMs.length === 0 && !sq) {
+            html += `<div class="dm-empty"><i class="fas fa-comment-dots" style="font-size:1.5rem;opacity:.5;margin-bottom:8px;display:block"></i>لا توجد محادثات بعد<br><span style="font-size:.7rem;color:var(--muted)">انقر على مستخدم من القائمة لبدء محادثة</span></div>`;
+        }
+
+        // All online users
+        if(!sq) {
+            const filteredRest = restUsers.filter(filter);
+            const collapsed = allOnlineCollapsed ? ' collapsed' : '';
+            html += `<div class="section-divider${collapsed}" id="allOnlineToggle"><i class="fas fa-chevron-down"></i> جميع المتصلين <span class="sd-count">${filteredRest.length}</span></div>`;
+            if(!allOnlineCollapsed) {
+                filteredRest.forEach(u => {
+                    const initial = (u.username||'?').charAt(0);
+                    html += `<div class="u" data-startdm="${u.id}" data-dmname="${esc(u.username||'')}">
+                        <div class="ud" style="background:${u.color}">${esc(initial)}</div>
+                        <div class="uib"><div class="un">${esc(u.username||'مجهول')} <span class="admin-tag">${u.is_admin?'👑':''}</span></div></div>
+                        <div class="ustat online"></div>
+                    </div>`;
+                });
+            }
+        }
+
+        if(!me && others.length === 0 && !sq) {
+            html = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">لا يوجد مستخدمون آخرون</div>';
+        }
+
         onlineList.innerHTML = html;
         onlineBadge.style.display = (others.length > 0) ? 'block' : 'none';
 
-        // Click to DM
+        // DM click
         onlineList.querySelectorAll('.u[data-startdm]').forEach(el => {
             el.addEventListener('click', () => {
-                const targetId = el.dataset.startdm;
-                const targetName = el.dataset.dmname;
-                startDM(targetId, targetName);
+                startDM(el.dataset.startdm, el.dataset.dmname);
             });
         });
+
+        // Collapse toggle
+        const toggle = document.getElementById('allOnlineToggle');
+        if(toggle) {
+            toggle.addEventListener('click', () => {
+                allOnlineCollapsed = !allOnlineCollapsed;
+                renderOnlineUsers();
+            });
+        }
     }
+
+    function formatTime(ts) {
+        if(!ts) return '';
+        const d = new Date(ts);
+        const now = new Date();
+        if(d.toDateString() === now.toDateString()) return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        const y = new Date(now); y.setDate(y.getDate()-1);
+        if(d.toDateString() === y.toDateString()) return 'أمس';
+        return d.toLocaleDateString([],{day:'2-digit',month:'2-digit'});
+    }
+
+    // Search input
+    document.addEventListener('input', (e) => {
+        if(e.target.id === 'dmSearch') renderOnlineUsers();
+    });
 
     async function loadUsers() {
         if(!sb) return;
@@ -840,24 +988,48 @@
     async function initUnreadFromHistory() {
         if(!sb || !userId) return;
         try {
-            const { data } = await sb
+            // Load last DMs for preview
+            const { data: recentMsgs } = await sb
                 .from('messages')
-                .select('user_id, room, created_at')
+                .select('user_id, room, created_at, text')
                 .ilike('room', `dm:%${userId}%`)
-                .neq('user_id', userId)
                 .eq('deleted', false)
                 .order('created_at', { ascending: false })
-                .limit(100);
-            if(data) {
+                .limit(200);
+            if(recentMsgs) {
                 const seen = new Set();
-                data.forEach(m => {
+                recentMsgs.forEach(m => {
                     const partner = getDmPartner(m.room, userId);
                     if(partner && !seen.has(partner)) {
                         seen.add(partner);
                         lastDmTime[partner] = m.created_at;
+                        // Store preview text
+                        let prevText = m.text || '';
+                        prevText = prevText.replace(/^data:image.*/, '🖼️ صورة');
+                        prevText = prevText.replace(/__R\{.*?\}__\|/, '');
+                        prevText = prevText.replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF');
+                        prevText = prevText.replace(/^https?:\/\/.*supabase.*\/voice-messages.*/, '🎤 رسالة صوتية');
+                        dmPreview[partner] = { text: prevText, time: m.created_at };
                     }
                 });
                 renderOnlineUsers();
+            }
+            // Count unreads
+            const { data: unreadMsgs } = await sb
+                .from('messages')
+                .select('room, user_id')
+                .ilike('room', `dm:%${userId}%`)
+                .neq('user_id', userId)
+                .eq('deleted', false)
+                .gte('created_at', lastRead)
+                .limit(100);
+            if(unreadMsgs) {
+                unreadMsgs.forEach(m => {
+                    const partner = getDmPartner(m.room, userId);
+                    if(partner) {
+                        unreadCounts[partner] = (unreadCounts[partner] || 0) + 1;
+                    }
+                });
             }
         } catch(e) { console.error('initUnreadFromHistory:', e); }
     }
@@ -875,7 +1047,7 @@
         const room = `dm:${parts[0]}_${parts[1]}`;
         const label = `محادثة مع ${targetName}`;
         switchRoom(room, label);
-        sidebar.classList.remove('open');
+        // Don't close sidebar - keep DM list visible
         // Clear unread for this user
         unreadCounts[targetId] = 0;
         renderOnlineUsers();
@@ -970,8 +1142,17 @@
                     const partnerId = getDmPartner(n.room, userId);
                     if(partnerId) {
                         lastDmTime[partnerId] = n.created_at || Date.now();
+                        // Store preview
+                        let prevText = n.text || '';
+                        prevText = prevText.replace(/^data:image.*/, '🖼️ صورة');
+                        prevText = prevText.replace(/__R\{.*?\}__\|/, '');
+                        prevText = prevText.replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF');
+                        prevText = prevText.replace(/^https?:\/\/.*supabase.*\/voice-messages.*/, '🎤 رسالة صوتية');
+                        dmPreview[partnerId] = { text: prevText, time: n.created_at || Date.now() };
                         if(!isMyMsg) {
                             unreadCounts[partnerId] = (unreadCounts[partnerId] || 0) + 1;
+                            // Auto-open sidebar on incoming DM
+                            sidebar.classList.add('open');
                         }
                         renderOnlineUsers();
                     }
@@ -1079,7 +1260,7 @@
 
         let body = '';
         if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
-        else if(isAudio2) body = `<audio src="${esc(actualText)}" controls preload="none"></audio>`;
+        else if(isAudio2) body = `<div class="vp"><button class="vp-play" data-src="${esc(actualText)}"><i class="fas fa-play"></i></button><div class="vp-bar"><div class="vp-progress"></div></div><span class="vp-dur">0:00</span></div>`;
         else if(isImg2) body = `<img src="${esc(actualText)}" onclick="window.open('${esc(actualText)}')" loading="lazy">`;
         else body = linkify(actualText);
 
@@ -1437,6 +1618,95 @@
 
         toast('✅ أهلًا بك!');
         joinChat(data);
+    });
+
+    // ════════════════════════════════════
+    // 🎵  Custom Voice Player
+    // ════════════════════════════════════
+    let currentAudio = null;
+
+    document.addEventListener('click', (e) => {
+        // ── Play/Pause ──
+        const playBtn = e.target.closest('.vp-play');
+        if(playBtn) {
+            const vp = playBtn.closest('.vp');
+            const bar = vp.querySelector('.vp-bar .vp-progress');
+            const dur = vp.querySelector('.vp-dur');
+            const src = playBtn.dataset.src;
+
+            // If same audio, toggle pause
+            if(currentAudio && currentAudio.dataset.src === src) {
+                if(!currentAudio.paused) {
+                    currentAudio.pause();
+                    playBtn.classList.remove('playing');
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                } else {
+                    currentAudio.play();
+                    playBtn.classList.add('playing');
+                    playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                return;
+            }
+
+            // Stop previous
+            if(currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                document.querySelectorAll('.vp-play.playing').forEach(b => {
+                    b.classList.remove('playing');
+                    b.innerHTML = '<i class="fas fa-play"></i>';
+                });
+            }
+
+            // Play new
+            const audio = new Audio(src);
+            audio.dataset.src = src;
+            currentAudio = audio;
+            audio.play();
+            playBtn.classList.add('playing');
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+
+            audio.addEventListener('loadedmetadata', () => {
+                if(!audio.paused) {
+                    const m = Math.floor((audio.duration||0)/60);
+                    const s = Math.floor((audio.duration||0)%60);
+                    dur.textContent = (m||'0')+':'+(s<10?'0':'')+(s||'0');
+                }
+            });
+
+            audio.addEventListener('timeupdate', () => {
+                if(audio.duration) {
+                    const pct = (audio.currentTime/audio.duration)*100;
+                    bar.style.width = pct+'%';
+                    const m = Math.floor(audio.currentTime/60);
+                    const s = Math.floor(audio.currentTime%60);
+                    dur.textContent = (m||'0')+':'+(s<10?'0':'')+(s||'0');
+                }
+            });
+
+            audio.addEventListener('ended', () => {
+                playBtn.classList.remove('playing');
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                bar.style.width = '0%';
+                if(audio.duration) {
+                    const m = Math.floor(audio.duration/60);
+                    const s = Math.floor(audio.duration%60);
+                    dur.textContent = (m||'0')+':'+(s<10?'0':'')+(s||'0');
+                }
+                currentAudio = null;
+            });
+            return;
+        }
+
+        // ── Seek on progress bar ──
+        const seekBar = e.target.closest('.vp-bar');
+        if(seekBar && currentAudio && !currentAudio.paused) {
+            const rect = seekBar.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (e.clientX - rect.left)/rect.width));
+            if(currentAudio.duration) {
+                currentAudio.currentTime = pct * currentAudio.duration;
+            }
+        }
     });
 
     // ════════════════════════════════════
