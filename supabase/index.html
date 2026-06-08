@@ -17,10 +17,11 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-            background:var(--bg); color:var(--text); height:100vh;
-            display:flex; justify-content:center; align-items:center; overflow:hidden;
+            background:var(--bg); color:var(--text); height:100%;
+            display:flex; justify-content:center; align-items:center;
+            overscroll-behavior:none; -webkit-overflow-scrolling:touch;
         }
-
+        .app { width:100%; height:100vh; height:100dvh; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; }
         /* ═══ Name Screen ═════════════════════ */
         #screen {
             position:fixed;inset:0;background:rgba(17,27,33,0.97);
@@ -707,8 +708,19 @@
             if(app) app.style.height = window.visualViewport.height + 'px';
         };
         window.visualViewport.addEventListener('resize', fixHeight);
+        window.addEventListener('scroll', () => window.scrollTo(0, 0));
         fixHeight();
     }
+    // Focus input → make sure footer is visible on mobile
+    document.addEventListener('focusin', (e) => {
+        const tag = e.target?.tagName;
+        if(tag === 'INPUT' || tag === 'TEXTAREA') {
+            setTimeout(() => {
+                const footer = document.querySelector('footer');
+                if(footer) footer.scrollIntoView({ block:'nearest', behavior:'smooth' });
+            }, 300);
+        }
+    });
 
     // ── State ──────────────────────────
     let sb = null, userId = null, myName = '', myColor = '#005c4b';
