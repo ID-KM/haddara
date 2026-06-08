@@ -34,11 +34,16 @@ CREATE TABLE messages (
 );
 
 -- ═══════════════════════════════════════════════════════════════
+-- 2b. إضافة عمود reply_to (آمن - لا يمسح البيانات)
+-- ═══════════════════════════════════════════════════════════════
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to TEXT;
+
+-- ═══════════════════════════════════════════════════════════════
 -- 3. فهارس
 -- ═══════════════════════════════════════════════════════════════
-CREATE INDEX idx_messages_created_at ON messages(created_at DESC);
-CREATE INDEX idx_messages_room ON messages(room);
-CREATE INDEX idx_profiles_username ON profiles(username);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_room ON messages(room);
+CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
 
 -- ═══════════════════════════════════════════════════════════════
 -- 4. Row Level Security
@@ -69,5 +74,19 @@ CREATE POLICY "Anyone can insert profiles"
 -- ═══════════════════════════════════════════════════════════════
 -- 5. تفعيل Realtime
 -- ═══════════════════════════════════════════════════════════════
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE IF NOT EXISTS messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE IF NOT EXISTS profiles;
+
+-- ═══════════════════════════════════════════════════════════════
+-- 6. Storage bucket للرسائل الصوتية
+-- ═══════════════════════════════════════════════════════════════
+INSERT INTO storage.buckets (id, name, public, avif_autodetection)
+VALUES ('voice-messages', 'voice-messages', true, false)
+ON CONFLICT (id) DO NOTHING;
+
+-- سياسات رفع الملفات (للجميع)
+CREATE POLICY IF NOT EXISTS "voice_public_insert"
+  ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'voice-messages');
+
+CREATE POLICY IF NOT EXISTS "voice_public_select"
+  ON storage.objects FOR SELECT USING (bucket_id = 'voice-messages');

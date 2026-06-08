@@ -295,6 +295,14 @@
         }
         #reply-bar .rc:hover { color:var(--text); }
 
+        /* ═══ Voice Recording ═══════════════════ */
+        #voiceBtn.rec { color:#ef5350 !important; animation:pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        .msg audio {
+            max-width:220px;height:40px;border-radius:6px;display:block;
+        }
+        .msg audio::-webkit-media-controls-panel { background:var(--sent); }
+
         /* ═══ Edit Modal ══════════════════════ */
         #edit-overlay {
             position:fixed;inset:0;background:rgba(0,0,0,.6);
@@ -455,6 +463,7 @@
         <div class="iw"><input type="text" id="mi" placeholder="اكتب رسالة..." autocomplete="off"></div>
         <input type="file" id="fi" hidden accept="image/*">
         <label for="fi" class="ib" title="صورة"><i class="fas fa-paperclip"></i></label>
+        <button class="ib" id="voiceBtn" title="رسالة صوتية"><i class="fas fa-microphone"></i></button>
         <button class="ib" id="gifBtn" title="GIF"><i class="fas fa-icons"></i></button>
         <button class="ib" id="emojiBtn" title="إيموجي"><i class="fas fa-smile"></i></button>
 
@@ -535,6 +544,7 @@
     const onlineToggle = $('onlineToggle'), sidebar = $('sidebar'), onlineList = $('online-list');
     const emojiBtn = $('emojiBtn'), emojiPicker = $('emoji-picker'), emojiGrid = $('emojiGrid'), emojiSearch = $('emojiSearch');
     const gifBtn = $('gifBtn'), gifPicker = $('gif-picker'), gifGrid = $('gifGrid'), gifSearch = $('gifSearch'), gifStatus = $('gifStatus');
+    const voiceBtn = $('voiceBtn');
     const replyBar = $('reply-bar'), replyName = $('replyName'), replyText = $('replyText'), replyClose = $('replyClose');
     const editOverlay = $('edit-overlay'), editText = $('editText'), editSave = $('editSave'), editCancel = $('editCancel');
     const soundToggle = $('soundToggle'), onlineBadge = $('onlineBadge');
@@ -604,6 +614,86 @@
     document.addEventListener('click', (e) => {
         if(!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target))
             emojiPicker.classList.remove('open');
+    });
+
+    // ════════════════════════════════════
+    // 🎙️  VOICE RECORDING
+    // ════════════════════════════════════
+    let mediaRec = null;
+    let audioChunks = [];
+    let isRecording = false;
+    voiceBtn.addEventListener('click', async () => {
+        if(isRecording) {
+            // Stop recording
+            if(mediaRec && mediaRec.state !== 'inactive') {
+                mediaRec.stop();
+            }
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRec = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+            audioChunks = [];
+            isRecording = true;
+            voiceBtn.classList.add('rec');
+            emojiPicker.classList.remove('open');
+            gifPicker.classList.remove('open');
+
+            mediaRec.ondataavailable = (e) => {
+                if(e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRec.onstop = async () => {
+                isRecording = false;
+                voiceBtn.classList.remove('rec');
+                // Stop all tracks
+                stream.getTracks().forEach(t => t.stop());
+
+                if(audioChunks.length === 0) return;
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                if(blob.size < 100) { toast('التسجيل فارغ'); return; }
+                if(blob.size > 2_000_000) { toast('الصوت كبير جداً (حد 2MB)'); return; }
+
+                const fileName = `voice_${userId}_${Date.now()}.webm`;
+                const filePath = `${userId}/${fileName}`;
+
+                try {
+                    const { data, error } = await sb.storage.from('voice-messages').upload(filePath, blob, {
+                        contentType: 'audio/webm',
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                    if(error) throw error;
+
+                    const { data: { publicUrl } } = sb.storage.from('voice-messages').getPublicUrl(filePath);
+
+                    // Send as message
+                    const msg = { text: publicUrl, user_id:userId, user_name:myName, color:myColor, room:currentRoom, created_at:Date.now(), deleted:false, is_admin: isAdmin };
+                    if(replyTo) { msg.text = `__R${JSON.stringify({id:replyTo.id,un:replyTo.user_name,txt:replyTo.text})}__|${msg.text}`; cancelReply(); }
+                    const tempId = 'temp_' + Date.now();
+                    msg.id = tempId;
+                    renderMessage(msg);
+                    scrollDown();
+                    playSound('send');
+                    const { error: insErr } = await sb.from('messages').insert({
+                        text: msg.text, user_id: msg.user_id, user_name: msg.user_name,
+                        color: msg.color, room: msg.room, created_at: msg.created_at, deleted: msg.deleted
+                    });
+                    if(insErr) { toast('فشل إرسال الصوت'); return; }
+                    const el = chat.querySelector(`[data-id="${tempId}"]`);
+                    if(el) {
+                        el.querySelector('[data-reply]')?.setAttribute('data-reply', data.path);
+                    }
+                } catch(e) {
+                    toast('فشل رفع الصوت: ' + (e.message || 'قد يكون Bucket غير موجود'));
+                }
+            };
+
+            mediaRec.start();
+            toast('🎤 سجل الآن...');
+        } catch(e) {
+            toast('❌ ممنوع الوصول للميكروفون');
+        }
     });
 
     // ════════════════════════════════════
@@ -984,7 +1074,8 @@
             }
         }
         const isGif2 = actualText && (actualText.startsWith('https://') || actualText.startsWith('http://')) && (actualText.includes('giphy.com') || actualText.endsWith('.gif'));
-        const isImg2 = !isGif2 && actualText && actualText.startsWith('data:image');
+        const isAudio2 = actualText && actualText.includes('/storage/v1/object/public/voice-messages/');
+        const isImg2 = !isGif2 && !isAudio2 && actualText && actualText.startsWith('data:image');
         if(replyData && replyData.un) {
             const rt = replyData.txt ? replyData.txt.replace(/^data:image.*/, '🖼️ صورة').replace(/^https?:\/\/.*giphy\.com\/.*/, '🎞️ GIF').substring(0, 60) : '';
             replyHtml = `<div class="rqo"><div class="rqn">${esc(replyData.un)}</div><span class="rqt">${esc(rt)}</span></div>`;
@@ -992,6 +1083,7 @@
 
         let body = '';
         if(isGif2) body = `<img src="${esc(actualText)}" style="max-width:240px;border-radius:8px" loading="lazy">`;
+        else if(isAudio2) body = `<audio src="${esc(actualText)}" controls preload="none"></audio>`;
         else if(isImg2) body = `<img src="${esc(actualText)}" onclick="window.open('${esc(actualText)}')" loading="lazy">`;
         else body = linkify(actualText);
 
