@@ -592,7 +592,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vbWVvZGpndGh0Y2F2a2R2YmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDU4NDYsImV4cCI6MjA5NjMyMTg0Nn0.yg-ef5sckQA-U1vP5usVrKYrRTcuMQQRygRhw5q0_DA';
 
     // ── Config ─────────────────────────
-    const KEYS = { uid:'nxc_uid', name:'nxc_name', color:'nxc_color', draft:'nxc_draft', sound:'nxc_sound' };
+    const KEYS = { uid:'nxc_uid', name:'nxc_name', color:'nxc_color', admin:'nxc_admin', lastRead:'nxc_lastRead', draft:'nxc_draft', sound:'nxc_sound' };
     const MAX_IMG = 500_000;
     const PICKER_EMOJIS = ['😊','😂','❤️','🔥','👍','😍','🎉','💀','🙏','😭','😅','🤣','😎','🥺','✨','💪','😏','🤔','👀','😴','🤯','🥳','😈','🫡','🤝','✅','❌','⭐','💯','🔥','⚡','🌈','🎂','🎈','🎁','💎','👑','🚀','💡','📱','💻','🎮','🎵','🎬','📸','✈️','🏠','🌍','💰','🔑','🛡️','⚔️','🧠','🫀','👁️','🦾','🦿','🦷','👅','💋','👂','👃','🦶','👋','✋','🖐️','💔','🖤','💙','💚','💛','🧡','💜','🤎','🩵','💝','🌸','🌺','🌻','🌹','🍀','🌿','☀️','🌙','⭐','🌊','🔥','❄️','🍕','🍔','🌮','🍩','☕','🍺','🥂'];
     const GIPHY_KEY = 's6B4hDSI4W16Mp9IEANSvHP635oWBSL2'; // ← ضع مفتاح GIPHY من https://developers.giphy.com (مجاني)
@@ -610,6 +610,7 @@
     let lastDmTime = {};  // { userId: timestamp }
     let replyTo = null;   // { id, text, user_id, user_name }
     let dmPreview = {};   // { userId: { text, time } }
+    let lastRead = Date.now();
     function getDmPartner(room, myId) {
         const p = room.replace('dm:','').split('_');
         return p[0] === myId ? p[1] : p[0];
@@ -1553,6 +1554,15 @@
         myColor = profile.color;
         isAdmin = !!profile.is_admin;
 
+        // Save session to localStorage
+        try {
+            localStorage.setItem(KEYS.uid, userId);
+            localStorage.setItem(KEYS.name, myName);
+            localStorage.setItem(KEYS.color, myColor);
+            localStorage.setItem(KEYS.admin, isAdmin ? '1' : '0');
+            localStorage.setItem(KEYS.lastRead, String(lastRead));
+        } catch(e) { /* quota exceeded etc */ }
+
         scr.classList.add('hide');
         $('myAv').textContent = myName.charAt(0).toUpperCase();
         $('myAv').style.background = myColor;
@@ -1592,6 +1602,7 @@
         if(error) { err.textContent = 'فشل إنشاء الحساب: ' + error.message; return; }
 
         toast('✅ تم إنشاء الحساب!');
+        lastRead = Date.now();
         joinChat(data);
     });
 
@@ -1617,6 +1628,7 @@
         if(data.password !== pwHash) { err.textContent = 'كلمة السر خطأ'; return; }
 
         toast('✅ أهلًا بك!');
+        lastRead = Date.now();
         joinChat(data);
     });
 
@@ -1721,6 +1733,31 @@
             loadUsers();
         }
     });
+
+    // ════════════════════════════════════
+    // 🔁  AUTO-LOGIN from localStorage
+    // ════════════════════════════════════
+    (async function autoLogin() {
+        const savedId = localStorage.getItem(KEYS.uid);
+        const savedName = localStorage.getItem(KEYS.name);
+        if(!savedId || !savedName) return;
+        if(!initSupabase()) return;
+        const { data } = await sb.from('profiles')
+            .select('id, username, color, is_admin')
+            .eq('id', savedId)
+            .eq('username', savedName)
+            .maybeSingle();
+        if(data) {
+            const savedLastRead = localStorage.getItem(KEYS.lastRead);
+            lastRead = savedLastRead ? Number(savedLastRead) : Date.now();
+            await joinChat(data);
+        } else {
+            // User deleted or renamed — clear saved session
+            ['uid','name','color','admin','lastRead'].forEach(k => {
+                try { localStorage.removeItem(KEYS[k]); } catch {}
+            });
+        }
+    })();
 
 })();
 </script>
