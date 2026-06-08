@@ -153,8 +153,6 @@
         @keyframes in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
         .msg.se { align-self:flex-start; align-items:flex-start; }
         .msg.re { align-self:flex-end; align-items:flex-end; }
-        .msg.fs { align-self:flex-end; align-items:flex-end; }
-        .msg.fr { align-self:flex-start; align-items:flex-start; }
         .msg .nm { font-size:.72rem; font-weight:bold; margin-bottom:2px; padding:0 4px; }
         .msg.re .nm { color:#53bdeb; cursor:pointer; }
         .msg.re .nm:hover { text-decoration:underline; }
@@ -166,8 +164,6 @@
         }
         .msg.se .bb { background:var(--sent); border-radius:8px 8px 2px 8px; }
         .msg.re .bb { background:var(--panel); border-radius:8px 8px 8px 2px; }
-        .msg.fs .bb { background:var(--sent); border-radius:8px 8px 8px 2px; }
-        .msg.fr .bb { background:var(--panel); border-radius:8px 8px 2px 8px; }
         .msg .bb img { max-width:100%; max-height:300px; border-radius:4px; margin:4px 0; display:block; cursor:pointer; }
         .msg .mt {
             font-size:.6rem; color:rgba(255,255,255,.5);
@@ -223,26 +219,26 @@
 
         /* ═══ Emoji Picker ════════════════════ */
         #emoji-picker {
-            position:absolute;bottom:60px;left:12px;
-            background:var(--panel);border-radius:12px;
-            padding:10px;box-shadow:0 5px 30px rgba(0,0,0,.5);
-            display:none;z-index:500;width:420px;
+            position:absolute;bottom:64px;left:12px;
+            background:var(--panel);border-radius:14px;
+            padding:14px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+            display:none;z-index:500;width:440px;
         }
         #emoji-picker.open { display:block; }
         #emoji-picker .eg {
-            display:grid;grid-template-columns:repeat(8,1fr);gap:4px;
-            max-height:260px;overflow-y:auto;
+            display:grid;grid-template-columns:repeat(9,1fr);gap:3px;
+            max-height:320px;overflow-y:auto;
         }
         #emoji-picker .eg span {
-            font-size:1.4rem;cursor:pointer;text-align:center;
-            padding:5px;border-radius:6px;transition:background .15s;
-            line-height:1.5;
+            font-size:1.8rem;cursor:pointer;text-align:center;
+            padding:6px 2px;border-radius:8px;transition:background .15s;
+            line-height:1.6;
         }
-        #emoji-picker .eg span:hover { background:rgba(255,255,255,.1); }
+        #emoji-picker .eg span:hover { background:rgba(255,255,255,.12); }
         #emoji-picker .search-emoji {
-            width:100%;padding:6px 10px;margin-bottom:6px;
-            border-radius:6px;border:1px solid #333;background:var(--input);
-            color:#fff;outline:none;font-size:.85rem;
+            width:100%;padding:8px 12px;margin-bottom:8px;
+            border-radius:8px;border:1px solid #444;background:var(--input);
+            color:#fff;outline:none;font-size:.9rem;
         }
 
         /* ═══ GIF Picker ═══════════════════════ */
