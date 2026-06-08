@@ -231,8 +231,8 @@
             line-height:1.5;word-break:break-word;
             box-shadow:0 1px 2px rgba(0,0,0,.2);position:relative;
         }
-        .msg.se .bb { background:var(--sent); border-radius:8px 8px 2px 8px; }
-        .msg.re .bb { background:var(--panel); border-radius:8px 8px 8px 2px; }
+        .msg.se .bb { background:var(--sent); border-radius:8px 8px 2px 8px; padding-bottom:26px; }
+        .msg.re .bb { background:var(--panel); border-radius:8px 8px 8px 2px; padding-bottom:26px; }
         .msg .bb img { max-width:100%; max-height:300px; border-radius:4px; margin:4px 0; display:block; cursor:pointer; }
         .msg .mt {
             font-size:.6rem; color:rgba(255,255,255,.5);
@@ -248,39 +248,42 @@
         .msg .mt .db { color:var(--danger); }
         .msg .mt .db:hover { opacity:1; transform:scale(1.15); }
 
-        /* ═══ Reactions ════════════════════════ */
+        /* ═══ Reactions (inside .bb) ══════════════════ */
         .msg .rxns {
-            display:flex;flex-wrap:wrap;align-items:center;gap:4px;
-            margin-top:4px;padding:0 4px;position:relative;
+            display:flex;flex-wrap:wrap;align-items:center;gap:3px;
+            position:absolute;bottom:4px;right:6px;
+            max-width:100%;direction:ltr;
         }
+        .msg.se .rxns { right:auto;left:6px; }
         .msg .rxn {
-            display:inline-flex;align-items:center;gap:3px;
-            padding:2px 8px;border-radius:12px;
-            background:rgba(255,255,255,.08);cursor:pointer;
-            font-size:.78rem;transition:background .15s,transform .1s;
-            user-select:none;line-height:1.4;
+            display:inline-flex;align-items:center;gap:2px;
+            padding:1px 6px;border-radius:10px;
+            background:rgba(255,255,255,.12);cursor:pointer;
+            font-size:.68rem;transition:background .15s,transform .1s;
+            user-select:none;line-height:1.3;
         }
-        .msg .rxn:hover { background:rgba(255,255,255,.15); transform:scale(1.05); }
-        .msg .rxn:active { transform:scale(.9); }
-        .msg .rxn.rxn-mine { background:rgba(0,168,132,.25); }
-        .msg .rxn .rxn-emoji { font-size:.9rem; }
-        .msg .rxn .rxn-count { font-size:.7rem; color:var(--muted); }
+        .msg .rxn:hover { background:rgba(255,255,255,.22); transform:scale(1.08); }
+        .msg .rxn:active { transform:scale(.85); }
+        .msg .rxn.rxn-mine { background:rgba(0,168,132,.35); }
+        .msg .rxn .rxn-emoji { font-size:.75rem; }
+        .msg .rxn .rxn-count { font-size:.6rem; color:rgba(255,255,255,.6); }
         .msg .rxn-add {
             display:inline-flex;align-items:center;justify-content:center;
-            width:24px;height:24px;border-radius:50%;
-            background:rgba(255,255,255,.06);cursor:pointer;
-            font-size:.7rem;color:var(--muted);transition:.15s;
-            border:none;padding:0;
+            width:18px;height:18px;border-radius:50%;
+            background:rgba(255,255,255,.08);cursor:pointer;
+            font-size:.55rem;color:rgba(255,255,255,.5);transition:.15s;
+            border:none;padding:0;line-height:1;
         }
-        .msg .rxn-add:hover { background:rgba(255,255,255,.15); color:var(--text); }
+        .msg .rxn-add:hover { background:rgba(255,255,255,.18); color:#fff; }
         .msg .rxn-picker {
-            display:none;align-items:center;gap:3px;
-            padding:4px 6px;border-radius:20px;
-            background:var(--panel);box-shadow:0 2px 12px rgba(0,0,0,.5);
-            position:absolute;z-index:50;top:-40px;left:0;
+            display:none;align-items:center;gap:2px;
+            padding:3px 5px;border-radius:16px;
+            background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.5);
+            position:absolute;z-index:50;bottom:100%;right:0;
+            margin-bottom:4px;white-space:nowrap;
         }
+        .msg.se .rxn-picker { right:auto;left:0; }
         .msg .rxn-picker.open { display:flex; }
-        .rxn-wrap { position:relative; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .edited { font-size:.6rem; color:var(--muted); margin-right:4px; }
         .msg .rqo {
@@ -1448,12 +1451,12 @@
                 ${replyHtml}
                 ${body}
                 <div class="mt">${edited}<span>${time}</span>${actions}</div>
-            </div>
-            <div class="rxns" data-msg-id="${msg.id}">
-                ${buildReactionsHtml(msg.reactions)}
-                <button class="rxn-add" title="تفاعل">+</button>
-                <div class="rxn-picker">
-                    ${REACT_EMOJIS.map(e => `<span class="rxn" data-emoji="${e}">${e}</span>`).join('')}
+                <div class="rxns" data-msg-id="${msg.id}">
+                    ${buildReactionsHtml(msg.reactions)}
+                    <button class="rxn-add" title="تفاعل">+</button>
+                    <div class="rxn-picker">
+                        ${REACT_EMOJIS.map(e => `<span class="rxn" data-emoji="${e}">${e}</span>`).join('')}
+                    </div>
                 </div>
             </div>`;
 
