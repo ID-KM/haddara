@@ -279,11 +279,11 @@
             display:none;align-items:center;gap:2px;
             padding:3px 5px;border-radius:16px;
             background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.5);
-            position:absolute;z-index:999;bottom:calc(100% + 4px);right:0;
-            white-space:nowrap;
+            position:absolute;z-index:999;bottom:100%;right:0;
+            margin-bottom:4px;white-space:nowrap;
         }
-        .msg.se .rxn-picker { right:auto;left:0; }
         .msg .rxn-picker.open { display:flex; }
+        .msg .rxw { position:relative;display:inline-flex; }
         .msg .bb a { color:#53bdeb; text-decoration:underline; }
         .msg .bb-body { flex:1; min-width:0; }
         .msg .edited { font-size:.6rem; color:var(--muted); margin-right:4px; }
@@ -1365,19 +1365,18 @@
     function updateReactionsBar(msgEl, reactions) {
         const rxnsEl = msgEl.querySelector('.rxns');
         if(!rxnsEl) return;
-        const picker = rxnsEl.querySelector('.rxn-picker');
-        const addBtn = rxnsEl.querySelector('.rxn-add');
+        const rw = rxnsEl.querySelector('.rxw');
         const html = buildReactionsHtml(reactions) || '';
-        // Remove old badges (keep .rxn-add and .rxn-picker)
+        // Remove old badges (keep .rxw)
         Array.from(rxnsEl.children).forEach(child => {
-            if(child !== addBtn && child !== picker) {
+            if(child !== rw) {
                 if(child.matches && child.matches('.rxn[data-emoji]')) child.remove();
             }
         });
-        // Insert new badges before addBtn
+        // Insert new badges before .rxw
         const temp = document.createElement('span');
         temp.innerHTML = html;
-        Array.from(temp.children).forEach(badge => rxnsEl.insertBefore(badge, addBtn));
+        Array.from(temp.children).forEach(badge => rxnsEl.insertBefore(badge, rw));
     }
 
     async function toggleReaction(msgId, emoji) {
@@ -1461,6 +1460,7 @@
         const senderName = msg.user_name || 'مجهول';
         const adminBadge = msg.is_admin ? '<span class="admin-badge">👑</span>' : '';
 
+        const rxnsAdd = `<button class="rxn-add" title="تفاعل">+</button>`;
         div.innerHTML = `
             <span class="nm">${esc(senderName)}${adminBadge}</span>
             <div class="bb"${bstyle}>
@@ -1471,10 +1471,12 @@
                 </div>
                 <div class="rxns" data-msg-id="${msg.id}">
                     ${buildReactionsHtml(msg.reactions)}
-                    <button class="rxn-add" title="تفاعل">+</button>
-                    <div class="rxn-picker">
-                        ${REACT_EMOJIS.map(e => `<span class="rxn" data-emoji="${e}">${e}</span>`).join('')}
-                    </div>
+                    <span class="rxw">
+                        ${rxnsAdd}
+                        <div class="rxn-picker">
+                            ${REACT_EMOJIS.map(e => `<span class="rxn" data-emoji="${e}">${e}</span>`).join('')}
+                        </div>
+                    </span>
                 </div>
             </div>`;
 
