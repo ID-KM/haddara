@@ -1,5 +1,17 @@
 # 🚀 هدرة — Haddara Chat
 
+<p align="center">
+  <a href="https://id-km.github.io/haddara/supabase/">
+    <img src="https://img.shields.io/badge/🟢_التطبيق_المباشر-https://id--km.github.io/haddara/supabase/-00a86b?style=for-the-badge" alt="Live App">
+  </a>
+</p>
+
+<p align="center">
+  <strong>→ <a href="https://id-km.github.io/haddara/supabase/">افتح التطبيق الآن</a> ←</strong>
+</p>
+
+---
+
 دردشة عربية فورية مدعومة بـ **Supabase** + **GitHub Pages**.
 
 ## ✨ الميزات
@@ -20,6 +32,13 @@
 - **Supabase** (قاعدة البيانات + Realtime)
 - **Vanilla JS** (كود خفيف بدون إطارات)
 - **GitHub Pages** (استضافة مجانية)
+
+## 🚀 رابط التطبيق
+
+| الإصدار | الرابط |
+|---------|--------|
+| 🟢 **Supabase (مباشر)** | [id-km.github.io/haddara/supabase/](https://id-km.github.io/haddara/supabase/) |
+| 📂 كود المصدر | [github.com/ID-KM/haddara](https://github.com/ID-KM/haddara) |
 
 ## 🚀 نشر سريع
 
